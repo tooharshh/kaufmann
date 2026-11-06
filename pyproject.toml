@@ -1,0 +1,22 @@
+[project]
+name = "kaufmann"
+version = "0.1.0"
+description = "English and Telugu voice shopping assistant with a shared commerce engine."
+requires-python = ">=3.11"
+dependencies = [
+    "livekit-agents==1.8.11",
+    "livekit-plugins-sarvam==1.8.11",
+    "python-dotenv==1.2.4",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 88
+
+[dependency-groups]
+dev = [
+    "pytest==9.2.0",
+    "ruff==0.17.4",
+]
