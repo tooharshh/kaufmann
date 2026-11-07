@@ -299,6 +299,9 @@ async function handleAgentNavigation(event) {
     document.querySelectorAll('[data-category]').forEach(tab => tab.classList.toggle('active', tab.dataset.category === ui.category));
     navigate('/');
     await loadCatalog();
+    const targetOffset = Number.isSafeInteger(event.offset) && event.offset >= 0 ? Math.min(event.offset, 100000) : 0;
+    while (ui.offset <= targetOffset && ui.more) await loadCatalog(true);
+    if (typeof event.focus_product_id === 'string') [...document.querySelectorAll('.product-card')].find(card => card.dataset.productId === event.focus_product_id)?.scrollIntoView({behavior: 'smooth', block: 'center'});
   }
 }
 document.querySelectorAll('a.brand').forEach(link => link.addEventListener('click', event => { if (ui.auth) { event.preventDefault(); navigate('/'); maybeLoadMore(); } }));

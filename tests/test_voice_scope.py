@@ -23,6 +23,8 @@ def test_every_phase_keeps_scope_and_exposes_only_shopping_tools():
         "save_preference",
         "focus_shopping",
         "search_products",
+        "search_closest_products",
+        "show_more_products",
         "catalog_filter_options",
         "product_details",
         "compare_products",

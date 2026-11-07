@@ -22,6 +22,9 @@ class VoiceRuntime:
         self.publish_navigation = None
         self.focused_product = None
         self.speech_names = []
+        self.last_search_signature = None
+        self.last_search_offset = 0
+        self.last_search_arguments = None
         self.profile_auth = profile_auth
         self.profile_authorization = "Bearer " + access_token if access_token else None
         self.profile_owner = getattr(engine, "user_id", None)
@@ -152,9 +155,32 @@ class VoiceRuntime:
         async with self.lock:
             if not self.allowed(handle) or self.state is None:
                 return {"status": "user_turn_required"}
+            signature = tuple(
+                (key, json.dumps(arguments.get(key), sort_keys=True))
+                for key in (
+                    "query",
+                    "category",
+                    "max_price_paise",
+                    "min_price_paise",
+                    "sort_by",
+                    "filters",
+                    "min_rating",
+                    "availability",
+                )
+            )
+            requested_offset = arguments.get("offset", 0)
+            if signature == self.last_search_signature and requested_offset == 0:
+                requested_offset = self.last_search_offset + arguments.get("limit", 3)
+            arguments["offset"] = requested_offset
             result = await self.catalog.search(**arguments)
             if result["status"] not in {"ok", "not_found"}:
                 return result
+            self.last_search_signature = signature
+            self.last_search_offset = requested_offset
+            self.last_search_arguments = {
+                key: value.copy() if isinstance(value, dict) else value
+                for key, value in arguments.items()
+            }
             saved = self.remember(
                 await self.engine.update_context(
                     self.state["version"],
@@ -180,10 +206,51 @@ class VoiceRuntime:
                     "filters": arguments.get("filters") or {},
                     "min_rating": arguments.get("min_rating"),
                     "availability": arguments.get("availability", "discoverable"),
+                    "offset": requested_offset,
+                    "focus_product_id": result["products"][0]["id"]
+                    if result["products"]
+                    else None,
                     "version": self.state["version"],
                 }
             )
             return {**result, "state": self.state}
+
+    async def search_more(self, handle):
+        if self.last_search_arguments is None:
+            return {"status": "not_found", "products": [], "has_more": False}
+        arguments = dict(self.last_search_arguments)
+        arguments["offset"] = self.last_search_offset + arguments.get("limit", 3)
+        return await self.search(handle, **arguments)
+
+    async def search_closest(self, handle, *, relax_fields, filters=None, **arguments):
+        filters = filters or {}
+        if (
+            not isinstance(relax_fields, list)
+            or len(relax_fields) > 10
+            or any(not isinstance(field, str) for field in relax_fields)
+        ):
+            return {"status": "invalid_input", "products": []}
+        relaxed = {
+            field: filters[field]
+            for field in dict.fromkeys(relax_fields)
+            if field in filters
+        }
+        rating = arguments.get("min_rating")
+        if "rating" in relax_fields and rating is not None:
+            relaxed["rating"] = rating
+        if not relaxed:
+            return {"status": "invalid_input", "products": []}
+        remaining = {key: value for key, value in filters.items() if key not in relaxed}
+        search_arguments = dict(arguments)
+        search_arguments["min_rating"] = None if "rating" in relax_fields else rating
+        result = await self.search(
+            handle, **search_arguments, filters=remaining, limit=3, offset=0
+        )
+        if result.get("status") == "ok":
+            result["status"] = "alternatives"
+            result["exact_match"] = False
+            result["relaxed_filters"] = relaxed
+        return result
 
     async def navigate(self, event):
         if self.publish_navigation is None:

@@ -43,6 +43,63 @@ class CatalogTools:
         )
 
     @function_tool(
+        description="After search_products returns not_found, search closest alternatives by relaxing only shopper preferences you choose. Preserve explicit price limits, product type, brand and essential requirements. The result identifies exactly which filters were relaxed; explain that these are alternatives, not exact matches."
+    )
+    async def search_closest_products(
+        self,
+        context: RunContext,
+        query: str = "",
+        category: str = "",
+        max_price_paise: int | None = None,
+        min_price_paise: int | None = None,
+        sort_by: Literal[
+            "relevance", "price_asc", "price_desc", "rating_desc", "newest"
+        ] = "relevance",
+        filters: dict[str, str] | None = None,
+        relax_fields: list[
+            Literal[
+                "color",
+                "size",
+                "gender",
+                "material",
+                "occasion",
+                "fit",
+                "pattern",
+                "sleeve",
+                "type",
+                "rating",
+            ]
+        ]
+        | None = None,
+        min_rating: float | None = None,
+        availability: Literal[
+            "discoverable", "all", "available", "out_of_stock", "unknown"
+        ] = "discoverable",
+    ) -> dict:
+        if relax_fields is None:
+            relax_fields = []
+        return voice_result(
+            await self.runtime.search_closest(
+                context.speech_handle,
+                query=query,
+                category=category,
+                max_price_paise=max_price_paise,
+                min_price_paise=min_price_paise,
+                sort_by=sort_by,
+                filters=filters,
+                relax_fields=relax_fields,
+                min_rating=min_rating,
+                availability=availability,
+            )
+        )
+
+    @function_tool(
+        description="Show the next three products from the latest catalog search, preserving its query, filters and sorting. Use when the shopper asks for more or different suggestions, or rejects the current recommendations."
+    )
+    async def show_more_products(self, context: RunContext) -> dict:
+        return voice_result(await self.runtime.search_more(context.speech_handle))
+
+    @function_tool(
         description="Read actual catalog categories, listed attribute filter values and supported sorts before selecting unfamiliar values. Missing attributes are unknown; listed size is not variant stock."
     )
     async def catalog_filter_options(self) -> dict:
