@@ -28,7 +28,10 @@ class Settings:
         values["APP_ORIGIN"] = os.environ.get(
             "APP_ORIGIN", os.environ.get("RENDER_EXTERNAL_URL", "http://localhost:8080")
         ).strip()
-        missing = [name for name, value in values.items() if not value]
+        values["LIVEKIT_AGENT_DEPLOYMENT"] = os.environ.get(
+            "LIVEKIT_AGENT_DEPLOYMENT", ""
+        ).strip()
+        missing = [name for name in names if not values[name]]
         if missing:
             raise ValueError("Missing configuration: " + ", ".join(missing))
         for name, schemes in (

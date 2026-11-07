@@ -61,6 +61,18 @@ def verify_dispatch_context(metadata, room, secret, *, now=None):
 def voice_session(settings, user_id, access_token):
     room = "kaufmann-" + uuid4().hex
     identity = "shopper:" + str(user_id)
+    dispatch = {
+        "agent_name": AGENT_NAME,
+        "metadata": dispatch_metadata(
+            user_id,
+            room,
+            settings["VOICE_DISPATCH_SECRET"],
+            access_token=access_token,
+        ),
+    }
+    deployment = settings.values.get("LIVEKIT_AGENT_DEPLOYMENT")
+    if deployment:
+        dispatch["deployment"] = deployment
     token = (
         api.AccessToken(settings["LIVEKIT_API_KEY"], settings["LIVEKIT_API_SECRET"])
         .with_identity(identity)
@@ -81,17 +93,7 @@ def voice_session(settings, user_id, access_token):
                 max_participants=2,
                 empty_timeout=60,
                 departure_timeout=20,
-                agents=[
-                    api.RoomAgentDispatch(
-                        agent_name=AGENT_NAME,
-                        metadata=dispatch_metadata(
-                            user_id,
-                            room,
-                            settings["VOICE_DISPATCH_SECRET"],
-                            access_token=access_token,
-                        ),
-                    )
-                ],
+                agents=[api.RoomAgentDispatch(**dispatch)],
             )
         )
         .to_jwt()
