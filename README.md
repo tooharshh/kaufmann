@@ -1,50 +1,72 @@
 # Kaufmann
 
-A store with a conventional e-commerce UI and an English/Telugu voice shopping assistant, including mixed-language conversations. Planned capabilities include product discovery, comparison, cart edits, substitutions, and explicit order confirmation.
+An English/Telugu voice shopping assistant with a conventional e-commerce storefront. Supports mixed-language discovery, product comparison, catalog filters, persisted carts, delivery addresses, profiles, order history and explicit demo-order confirmation.
 
-This repository is an initial skeleton with a Python environment and container definition. The voice worker, persistence, and frontend are not implemented yet.
+The stack is Python 3.11, LiveKit Agents, Cerebras GPT-OSS 120B, Sarvam STT/Bulbul TTS, and Supabase PostgreSQL/Auth. The frontend uses native HTML/CSS/JavaScript with a bundled LiveKit browser SDK. No Node build is needed.
 
-## Structure
-
-- `src/agent.py`: LiveKit worker entrypoint and session setup.
-- `src/agents/`: concierge, shopping advisor, cart, checkout, and category prompt modules.
-- `src/tools/`: structured LLM-facing tool adapters.
-- `src/engine/`: deterministic cart, pricing, budget, and order operations shared by voice and web.
-- `src/state/`: session state and persistence.
-- `src/catalog/`: catalog access and search.
-- `src/db/`: database models and future migrations.
-- `web/`: store frontend.
-- `data/`: catalog seed data.
-- `scripts/`: catalog seeding and operational scripts.
-- `tests/`: engine, state, tool, and text conversation tests.
-
-Read `AGENTS.md` and `docs/ARCHITECTURE.md` before implementation.
-
-## Python setup
-
-Use Python 3.11 and uv. Runtime dependencies are pinned in `pyproject.toml`; `uv.lock` pins their transitive dependencies. Development dependencies include pytest and Ruff.
+## Run locally
 
 ```sh
-uv venv --python 3.11
 uv sync --locked
-uv run python --version
-uv run pytest
-uv run ruff check .
+cp -n .env.example .env
 ```
 
-`uv run` automatically uses `.venv`. For an interactive shell, use `source .venv/bin/activate`.
-
-## Container
+Fill in `.env` with existing service credentials. Never commit it. Start the API and voice worker in separate terminals:
 
 ```sh
-docker build -t kaufmann:local .
-docker run --rm kaufmann:local python -c 'from livekit import agents; from livekit.plugins import sarvam; print("Imports OK")'
+uv run python -m src.api
+uv run python -m src.agent dev
 ```
 
-The image uses Python 3.11, installs locked runtime dependencies without development tools, and runs as a non-root user. Local virtual environments and secret files are excluded from the build context.
+Open http://localhost:8080, sign in and select the microphone. Localhost or HTTPS is required for microphone access. Use `python -m src.agent start` in production; the legacy `dev` command in the pinned SDK does not hot-reload.
 
-The default command is `python src/agent.py start`. It currently exits with an explicit message because the worker is a placeholder. After worker implementation, provide configuration at runtime with `docker run --rm --env-file .env kaufmann:local`. The image does not yet serve HTTP or provide a Render health endpoint; these belong to worker implementation. It does not require inbound UDP ports.
+## Production build
+
+```sh
+docker compose config --quiet
+docker compose build
+docker compose up -d
+```
+
+The same non-root image runs the API and voice worker separately. Compose publishes only the API on localhost; use HTTPS termination for public hosting. No migrations, seeding or model experiments run at startup. See [production instructions](docs/production.md) for health checks, graceful shutdown and Render configuration. These commands build and run containers; they do not provision Render.
+
+## Verify
+
+```sh
+uv run ruff check .
+uv run pytest
+bash scripts/test_database.sh
+```
+
+The database script uses disposable PostgreSQL. Never point tests at a shared database. Browser and optional real-provider checks are described in [tests](tests/README.md) and [voice](docs/voice.md).
+
+`uv run python -m src.check_connections` checks Cerebras model listing, Supabase Auth, LiveKit and a read-only database connection. It does not generate speech or authenticate Sarvam. `uv run python scripts/diagnose_database.py` checks DNS/TCP without transmitting the database password.
 
 ## Configuration
 
-`.env.example` lists configuration names only. Supply real values locally and never commit `.env`. The LLM provider, database technology, and frontend framework remain undecided.
+`.env.example` lists the required credentials and listener settings:
+
+- `CEREBRAS_API_KEY`, `SARVAM_API_KEY`.
+- `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`.
+- `DATABASE_URL`: Supabase Session pooler URL, with reserved password characters percent-encoded.
+- `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`.
+- `APP_ORIGIN`: frontend origin; use the deployed HTTPS URL in production.
+- `API_HOST`, `PORT`: HTTP listener, default `0.0.0.0:8080`.
+
+MCP connectors are development tools and are not required inside the application image.
+
+## Architecture and data
+
+The deterministic commerce engine owns prices, stock, totals and budgets. Web and voice use the same engine. Order confirmation requires an unchanged reviewed snapshot, completed review delivery and a later explicit user approval. Session state is persisted and reloaded across reconnects.
+
+The catalog contains historical Flipkart listings and demo inventory. Search uses PostgreSQL full-text matching, intent normalization and validated metadata filters. The evaluated hybrid candidate was rejected; see [evaluation findings](docs/discovery-evaluation.md). No pgvector migration was applied.
+
+Catalog preparation/import tools remain under `scripts/`; migrations remain under `supabase/migrations/`. Imports and migrations are explicit operations, never application startup tasks. See [catalog import](docs/catalog-import.md) before running them.
+
+This is a deployable demo, with no real payments, fulfillment or shipments. Profile addresses currently use Supabase user metadata; its limits are documented in the [HTTP API](docs/http-api.md).
+
+- [Architecture](docs/ARCHITECTURE.md)
+- [Commerce engine](docs/commerce-engine.md)
+- [HTTP API](docs/http-api.md)
+- [Voice pipeline](docs/voice.md)
+- [Frontend](web/README.md)
