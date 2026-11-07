@@ -43,7 +43,13 @@ def create_voice_session(settings, runtime):
         turn_handling=TurnHandlingOptions(
             turn_detection="stt",
             endpointing={"min_delay": 0.2, "max_delay": 3.0},
-            interruption={"enabled": True, "resume_false_interruption": False},
+            interruption={
+                "enabled": True,
+                "mode": "vad",
+                "min_duration": 0.15,
+                "min_words": 0,
+                "resume_false_interruption": False,
+            },
             preemptive_generation={"enabled": False},
         ),
         max_tool_steps=6,
