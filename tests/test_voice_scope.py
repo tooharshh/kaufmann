@@ -17,6 +17,9 @@ from src.voice.runtime import VoiceRuntime
 def test_every_phase_keeps_scope_and_exposes_only_shopping_tools():
     expected = {
         "shopping_state",
+        "profile_details",
+        "update_profile_details",
+        "save_profile_address",
         "save_preference",
         "focus_shopping",
         "search_products",

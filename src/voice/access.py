@@ -11,12 +11,13 @@ from livekit import api
 AGENT_NAME = "kaufmann-shopping"
 
 
-def dispatch_metadata(user_id, room, secret, *, now=None):
+def dispatch_metadata(user_id, room, secret, *, access_token=None, now=None):
     payload = json.dumps(
         {
             "user_id": str(user_id),
             "room": room,
             "expires": int(now or time.time()) + 600,
+            "access_token": access_token,
         },
         sort_keys=True,
         separators=(",", ":"),
@@ -27,6 +28,10 @@ def dispatch_metadata(user_id, room, secret, *, now=None):
 
 
 def verify_dispatch(metadata, room, secret, *, now=None):
+    return verify_dispatch_context(metadata, room, secret, now=now)["user_id"]
+
+
+def verify_dispatch_context(metadata, room, secret, *, now=None):
     try:
         envelope = json.loads(metadata)
         payload = base64.b64decode(envelope["payload"], altchars=b"-_", validate=True)
@@ -41,12 +46,19 @@ def verify_dispatch(metadata, room, secret, *, now=None):
             <= int(now or time.time()) + 600
         ):
             raise ValueError
-        return UUID(data["user_id"])
+        access_token = data.get("access_token")
+        if access_token is not None and (
+            not isinstance(access_token, str)
+            or not access_token
+            or len(access_token) > 8192
+        ):
+            raise ValueError
+        return {"user_id": UUID(data["user_id"]), "access_token": access_token}
     except (ValueError, KeyError, TypeError, AttributeError, UnicodeError):
         raise ValueError("Invalid voice session authorization") from None
 
 
-def voice_session(settings, user_id):
+def voice_session(settings, user_id, access_token):
     room = "kaufmann-" + uuid4().hex
     identity = "shopper:" + str(user_id)
     token = (
@@ -73,7 +85,10 @@ def voice_session(settings, user_id):
                     api.RoomAgentDispatch(
                         agent_name=AGENT_NAME,
                         metadata=dispatch_metadata(
-                            user_id, room, settings["VOICE_DISPATCH_SECRET"]
+                            user_id,
+                            room,
+                            settings["VOICE_DISPATCH_SECRET"],
+                            access_token=access_token,
                         ),
                     )
                 ],

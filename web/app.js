@@ -282,6 +282,7 @@ function maybeLoadMore() {
 async function handleAgentNavigation(event) {
   if (ui.busy && event?.type !== 'cart') return;
   if (!ui.auth || !event || (Number.isInteger(event.version) && event.version < (ui.cart?.version || 0))) return;
+  if (event.type === 'sarvam_rate_limit') { toast('Due to Sarvam rate limits, I cannot respond right away. Check the screen for the action status.'); return; }
   if (event.type === 'cart') { await loadSession(); navigate('/cart'); }
   else if (event.type === 'product' && typeof event.product_id === 'string' && event.product_id.length <= 128) await showProduct(event.product_id, {notify: false});
   else if (event.type === 'catalog' && typeof event.query === 'string' && event.query.length <= 200 && typeof event.category === 'string' && event.category.length <= 100) {

@@ -12,7 +12,12 @@ from livekit.agents import AgentSession, llm
 from src.agents.concierge import Concierge
 from src.catalog.search import Catalog
 from src.config import Settings
-from src.voice.access import dispatch_metadata, verify_dispatch, voice_session
+from src.voice.access import (
+    dispatch_metadata,
+    verify_dispatch,
+    verify_dispatch_context,
+    voice_session,
+)
 from src.voice.runtime import VoiceRuntime
 from tests.test_commerce_engine import ADDRESS, shop
 
@@ -27,7 +32,7 @@ def test_voice_tokens_bind_verified_owner_room_and_expiry():
             "VOICE_DISPATCH_SECRET": "different-shared-dispatch-secret-32-bytes",
         }
     )
-    result = voice_session(settings, user)
+    result = voice_session(settings, user, "sample-user-access-token")
     decoded = jwt.decode(
         result["token"],
         settings["LIVEKIT_API_SECRET"],
@@ -45,6 +50,12 @@ def test_voice_tokens_bind_verified_owner_room_and_expiry():
             dispatch["metadata"], result["room"], settings["VOICE_DISPATCH_SECRET"]
         )
         == user
+    )
+    assert (
+        verify_dispatch_context(
+            dispatch["metadata"], result["room"], settings["VOICE_DISPATCH_SECRET"]
+        )["access_token"]
+        == "sample-user-access-token"
     )
     metadata = dispatch_metadata(
         user, "room", settings["VOICE_DISPATCH_SECRET"], now=1000

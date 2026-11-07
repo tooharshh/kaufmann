@@ -194,7 +194,13 @@ def create_app(settings: Settings | None = None, *, pool=None) -> web.Applicatio
 
     async def voice_connect(request):
         await body(request, set())
-        return reply(voice_session(settings, request[USER]))
+        return reply(
+            voice_session(
+                settings,
+                request[USER],
+                request.headers["Authorization"].partition(" ")[2],
+            )
+        )
 
     async def config(request):
         return reply(public_auth_config(settings))

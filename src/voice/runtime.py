@@ -8,7 +8,7 @@ from src.voice.presentation import voice_result
 
 
 class VoiceRuntime:
-    def __init__(self, engine, catalog: Catalog):
+    def __init__(self, engine, catalog: Catalog, profile_auth=None, access_token=None):
         self.engine = engine
         self.catalog = catalog
         self.lock = asyncio.Lock()
@@ -22,6 +22,40 @@ class VoiceRuntime:
         self.publish_navigation = None
         self.focused_product = None
         self.speech_names = []
+        self.profile_auth = profile_auth
+        self.profile_authorization = "Bearer " + access_token if access_token else None
+        self.profile_owner = getattr(engine, "user_id", None)
+
+    async def profile(self):
+        if not self.profile_auth or not self.profile_authorization:
+            return {"status": "unavailable"}
+        from src.profile import profile_view, user_request
+
+        try:
+            user = await user_request(
+                self.profile_auth, self.profile_authorization, self.profile_owner
+            )
+        except (ValueError, TypeError, KeyError, TimeoutError):
+            return {"status": "unavailable"}
+        return {"status": "ok", "profile": profile_view(user)}
+
+    async def update_profile(self, operation, data):
+        current = await self.profile()
+        if current["status"] != "ok":
+            return current
+        from src.profile import update_profile
+
+        try:
+            return await update_profile(
+                self.profile_auth,
+                self.profile_authorization,
+                self.profile_owner,
+                operation,
+                data,
+                current["profile"]["revision"],
+            )
+        except (ValueError, TypeError, KeyError, TimeoutError):
+            return {"status": "unavailable"}
 
     def remember(self, result):
         if "state" in result:
