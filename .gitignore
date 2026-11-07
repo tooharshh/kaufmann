@@ -26,3 +26,18 @@ web/.next/
 # Keep downloaded source data local; commit provenance notes instead.
 data/flipkart/*.zip
 data/flipkart/*.csv
+data/processed/
+supabase/.temp/
+
+# Local credentials, environments and editor files.
+.envrc
+.mcp.json
+.venv*/
+.cache/
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+compose.override.yaml
+compose.override.yml
