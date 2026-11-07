@@ -193,14 +193,14 @@
       setButton('End voice', true);
       if (ui.focusedProduct && location.pathname.startsWith('/product/')) window.kaufmannSelectProduct(ui.focusedProduct.id);
       sendSelection();
-      showStatus('Microphone on. Waiting for your assistant…');
+      showStatus('Microphone on. The assistant may take a moment to wake up…');
       const present = [...client.remoteParticipants.values()].some(participant => participant.isAgent);
       if (present) { agentReady = true; sendSelection(); showStatus('Connected. What are you looking for?'); }
       else deadline = setTimeout(async () => {
         if (room !== client) return;
         await stop();
         showStatus('The assistant is unavailable. Please try again shortly.');
-      }, 30000);
+      }, 90000);
     } catch (error) {
       if (current !== epoch) return;
       await stop();
