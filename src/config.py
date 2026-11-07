@@ -19,13 +19,14 @@ class Settings:
             "LIVEKIT_URL",
             "LIVEKIT_API_KEY",
             "LIVEKIT_API_SECRET",
+            "VOICE_DISPATCH_SECRET",
             "DATABASE_URL",
             "SUPABASE_URL",
             "SUPABASE_PUBLISHABLE_KEY",
         )
         values = {name: os.environ.get(name, "").strip() for name in names}
         values["APP_ORIGIN"] = os.environ.get(
-            "APP_ORIGIN", "http://localhost:5173"
+            "APP_ORIGIN", os.environ.get("RENDER_EXTERNAL_URL", "http://localhost:8080")
         ).strip()
         missing = [name for name, value in values.items() if not value]
         if missing:

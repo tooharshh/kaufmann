@@ -17,5 +17,5 @@ COPY --from=build /app/.venv /app/.venv
 COPY --chown=app:app src/ ./src/
 COPY --chown=app:app web/ ./web/
 USER app
-EXPOSE 8080
-CMD ["python", "-m", "src.api"]
+EXPOSE 8081
+CMD ["python", "-m", "src.agent", "start"]
