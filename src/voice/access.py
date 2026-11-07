@@ -73,7 +73,7 @@ def voice_session(settings, user_id):
                     api.RoomAgentDispatch(
                         agent_name=AGENT_NAME,
                         metadata=dispatch_metadata(
-                            user_id, room, settings["LIVEKIT_API_SECRET"]
+                            user_id, room, settings["VOICE_DISPATCH_SECRET"]
                         ),
                     )
                 ],

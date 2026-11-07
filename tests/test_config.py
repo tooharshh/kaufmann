@@ -11,6 +11,7 @@ def test_invalid_database_url_is_redacted(monkeypatch, tmp_path: Path):
         "SARVAM_API_KEY",
         "LIVEKIT_API_KEY",
         "LIVEKIT_API_SECRET",
+        "VOICE_DISPATCH_SECRET",
         "SUPABASE_PUBLISHABLE_KEY",
     ):
         monkeypatch.setenv(name, "test-secret")

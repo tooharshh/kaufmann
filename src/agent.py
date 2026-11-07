@@ -27,7 +27,7 @@ async def entrypoint(ctx: agents.JobContext):
     settings = Settings.load()
     try:
         user_id = verify_dispatch(
-            ctx.job.metadata, ctx.job.room.name, settings["LIVEKIT_API_SECRET"]
+            ctx.job.metadata, ctx.job.room.name, settings["VOICE_DISPATCH_SECRET"]
         )
     except ValueError:
         ctx.shutdown(reason="Voice session authorization required")

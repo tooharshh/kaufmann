@@ -24,6 +24,7 @@ def test_voice_tokens_bind_verified_owner_room_and_expiry():
             "LIVEKIT_URL": "wss://example.livekit.cloud",
             "LIVEKIT_API_KEY": "local-test-key",
             "LIVEKIT_API_SECRET": "local-test-secret-with-at-least-32-bytes",
+            "VOICE_DISPATCH_SECRET": "different-shared-dispatch-secret-32-bytes",
         }
     )
     result = voice_session(settings, user)
@@ -41,18 +42,20 @@ def test_voice_tokens_bind_verified_owner_room_and_expiry():
     assert dispatch["agentName"] == "kaufmann-shopping"
     assert (
         verify_dispatch(
-            dispatch["metadata"], result["room"], settings["LIVEKIT_API_SECRET"]
+            dispatch["metadata"], result["room"], settings["VOICE_DISPATCH_SECRET"]
         )
         == user
     )
-    metadata = dispatch_metadata(user, "room", settings["LIVEKIT_API_SECRET"], now=1000)
+    metadata = dispatch_metadata(
+        user, "room", settings["VOICE_DISPATCH_SECRET"], now=1000
+    )
     for envelope, room, now in [
         (metadata, "other", 1001),
         (metadata, "room", 1600),
         (metadata.replace("payload", "tampered"), "room", 1001),
     ]:
         with pytest.raises(ValueError):
-            verify_dispatch(envelope, room, settings["LIVEKIT_API_SECRET"], now=now)
+            verify_dispatch(envelope, room, settings["VOICE_DISPATCH_SECRET"], now=now)
 
 
 class ScriptedLLM(llm.LLM):

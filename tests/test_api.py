@@ -54,6 +54,7 @@ def api_settings(server):
             "LIVEKIT_URL": "wss://example.livekit.cloud",
             "LIVEKIT_API_KEY": "local-test-key",
             "LIVEKIT_API_SECRET": "local-test-secret-with-at-least-32-bytes",
+            "VOICE_DISPATCH_SECRET": "different-shared-dispatch-secret-32-bytes",
         }
     )
 
