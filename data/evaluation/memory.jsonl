@@ -1,0 +1,20 @@
+{"id": "usual_size-en", "language": "en", "input": "I usually wear medium.", "expected_facts": [{"subject": "self", "scope": "clothing", "key": "size", "value": "medium"}], "human_review": "not_required"}
+{"id": "usual_size-te", "language": "te", "input": "నేను సాధారణంగా మీడియం వేసుకుంటాను.", "expected_facts": [{"subject": "self", "scope": "clothing", "key": "size", "value": "medium"}], "human_review": "pending"}
+{"id": "usual_size-te-Latn", "language": "te-Latn", "input": "Nenu saadharananga medium vesukuntaanu.", "expected_facts": [{"subject": "self", "scope": "clothing", "key": "size", "value": "medium"}], "human_review": "pending"}
+{"id": "usual_size-mixed", "language": "mixed", "input": "Naa usual size medium.", "expected_facts": [{"subject": "self", "scope": "clothing", "key": "size", "value": "medium"}], "human_review": "pending"}
+{"id": "recipient_size-en", "language": "en", "input": "My brother usually wears large; that is his size, not mine.", "expected_facts": [{"subject": "recipient:brother", "scope": "clothing", "key": "size", "value": "large"}], "human_review": "not_required"}
+{"id": "recipient_size-te", "language": "te", "input": "నా అన్నయ్య సాధారణంగా లార్జ్ వేసుకుంటాడు. అది నా సైజు కాదు.", "expected_facts": [{"subject": "recipient:brother", "scope": "clothing", "key": "size", "value": "large"}], "human_review": "pending"}
+{"id": "recipient_size-te-Latn", "language": "te-Latn", "input": "Naa annayya usually large vesukuntaadu. Adhi naa size kaadu.", "expected_facts": [{"subject": "recipient:brother", "scope": "clothing", "key": "size", "value": "large"}], "human_review": "pending"}
+{"id": "recipient_size-mixed", "language": "mixed", "input": "Brother usual size large, naa size kaadu.", "expected_facts": [{"subject": "recipient:brother", "scope": "clothing", "key": "size", "value": "large"}], "human_review": "pending"}
+{"id": "corrected_size-en", "language": "en", "input": "Actually my usual clothing size is large now.", "expected_facts": [{"subject": "self", "scope": "clothing", "key": "size", "value": "large"}], "human_review": "not_required"}
+{"id": "corrected_size-te", "language": "te", "input": "ఇప్పుడు నా సాధారణ బట్టల సైజు లార్జ్.", "expected_facts": [{"subject": "self", "scope": "clothing", "key": "size", "value": "large"}], "human_review": "pending"}
+{"id": "corrected_size-te-Latn", "language": "te-Latn", "input": "Ippudu naa usual clothing size large.", "expected_facts": [{"subject": "self", "scope": "clothing", "key": "size", "value": "large"}], "human_review": "pending"}
+{"id": "corrected_size-mixed", "language": "mixed", "input": "Actually naa usual size ippudu large.", "expected_facts": [{"subject": "self", "scope": "clothing", "key": "size", "value": "large"}], "human_review": "pending"}
+{"id": "temporary_budget-en", "language": "en", "input": "Today keep this purchase under five hundred rupees.", "expected_facts": [], "human_review": "not_required"}
+{"id": "temporary_budget-te", "language": "te", "input": "ఈరోజు ఈ కొనుగోలు ఐదు వందల లోపు ఉంచు.", "expected_facts": [], "human_review": "pending"}
+{"id": "temporary_budget-te-Latn", "language": "te-Latn", "input": "Eeroju ee purchase aidhu vandhala lopu unchu.", "expected_facts": [], "human_review": "pending"}
+{"id": "temporary_budget-mixed", "language": "mixed", "input": "Today budget five hundred lopu, only this purchase.", "expected_facts": [], "human_review": "pending"}
+{"id": "one_purchase-en", "language": "en", "input": "Add one medium shirt to the cart.", "expected_facts": [], "human_review": "not_required"}
+{"id": "one_purchase-te", "language": "te", "input": "కార్ట్‌లో ఒక మీడియం షర్టు కలుపు.", "expected_facts": [], "human_review": "pending"}
+{"id": "one_purchase-te-Latn", "language": "te-Latn", "input": "Cart lo oka medium shirt kalupu.", "expected_facts": [], "human_review": "pending"}
+{"id": "one_purchase-mixed", "language": "mixed", "input": "One medium shirt cart lo add cheyyi.", "expected_facts": [], "human_review": "pending"}

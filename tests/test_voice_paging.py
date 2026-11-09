@@ -7,11 +7,12 @@ from src.voice.runtime import VoiceRuntime
 
 def test_repeated_catalog_search_advances_and_show_more_keeps_constraints():
     class Engine:
-        async def update_context(self, version, result_ids):
+        async def update_context(self, version, result_ids, shopping_task):
             return {
                 "status": "ok",
                 "state": {
                     "version": version + 1,
+                    "shopping_task": shopping_task,
                     "result_ids": result_ids,
                     "pending_budget_exception": False,
                     "pending_review": False,
@@ -72,11 +73,12 @@ def test_repeated_catalog_search_advances_and_show_more_keeps_constraints():
 
 def test_closest_search_marks_relaxed_preference_and_keeps_budget():
     class Engine:
-        async def update_context(self, version, result_ids):
+        async def update_context(self, version, result_ids, shopping_task):
             return {
                 "status": "ok",
                 "state": {
                     "version": version + 1,
+                    "shopping_task": shopping_task,
                     "result_ids": result_ids,
                     "pending_budget_exception": False,
                     "pending_review": False,

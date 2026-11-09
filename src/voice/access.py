@@ -11,13 +11,26 @@ from livekit import api
 AGENT_NAME = "kaufmann-shopping"
 
 
-def dispatch_metadata(user_id, room, secret, *, access_token=None, now=None):
+def dispatch_metadata(
+    user_id,
+    room,
+    secret,
+    *,
+    access_token=None,
+    catalog_id=None,
+    generation=None,
+    now=None,
+):
     payload = json.dumps(
         {
             "user_id": str(user_id),
             "room": room,
             "expires": int(now or time.time()) + 600,
             "access_token": access_token,
+            "catalog_id": str(catalog_id)
+            if catalog_id
+            else "00000000-0000-0000-0000-000000000001",
+            "generation": generation,
         },
         sort_keys=True,
         separators=(",", ":"),
@@ -53,12 +66,19 @@ def verify_dispatch_context(metadata, room, secret, *, now=None):
             or len(access_token) > 8192
         ):
             raise ValueError
-        return {"user_id": UUID(data["user_id"]), "access_token": access_token}
+        return {
+            "user_id": UUID(data["user_id"]),
+            "access_token": access_token,
+            "catalog_id": UUID(
+                data.get("catalog_id", "00000000-0000-0000-0000-000000000001")
+            ),
+            "generation": data.get("generation"),
+        }
     except (ValueError, KeyError, TypeError, AttributeError, UnicodeError):
         raise ValueError("Invalid voice session authorization") from None
 
 
-def voice_session(settings, user_id, access_token):
+def voice_session(settings, user_id, access_token, *, catalog_id=None, generation=None):
     room = "kaufmann-" + uuid4().hex
     identity = "shopper:" + str(user_id)
     dispatch = {
@@ -68,6 +88,8 @@ def voice_session(settings, user_id, access_token):
             room,
             settings["VOICE_DISPATCH_SECRET"],
             access_token=access_token,
+            catalog_id=catalog_id,
+            generation=generation,
         ),
     }
     deployment = settings.values.get("LIVEKIT_AGENT_DEPLOYMENT")
@@ -100,6 +122,10 @@ def voice_session(settings, user_id, access_token):
     )
     return {
         "status": "ok",
+        "catalog_id": str(catalog_id)
+        if catalog_id
+        else "00000000-0000-0000-0000-000000000001",
+        "generation": generation,
         "url": settings["LIVEKIT_URL"],
         "token": token,
         "room": room,

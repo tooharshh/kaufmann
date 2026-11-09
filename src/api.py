@@ -12,10 +12,13 @@ from psycopg_pool import PoolTimeout
 
 from src.auth import AuthFailure, SupabaseAuth, public_auth_config
 from src.catalog.search import Catalog
+from src.catalog.selection import catalog_options, select_catalog
 from src.config import Settings
 from src.db.connection import create_pool
 from src.engine.cart import CommerceEngine
 from src.profile import profile_view, update_profile, user_request
+from src.state.memory import PreferenceMemory
+from src.state.session import Refusal
 from src.voice.access import voice_session
 
 
@@ -87,15 +90,12 @@ def create_app(settings: Settings | None = None, *, pool=None) -> web.Applicatio
     settings = settings or Settings.load()
     origin = settings.values.get("APP_ORIGIN", "http://localhost:5173")
     web_root = Path(__file__).resolve().parents[1] / "web"
+    web_build = web_root / "dist"
     public_paths = {
         "/",
         "/cart",
         "/orders",
         "/profile",
-        "/assets/app.js",
-        "/assets/styles.css",
-        "/assets/voice.js",
-        "/assets/livekit-client-2.23.0.umd.js",
         "/health",
         "/ready",
         "/api/config",
@@ -112,6 +112,8 @@ def create_app(settings: Settings | None = None, *, pool=None) -> web.Applicatio
                 response = web.Response(status=204)
             else:
                 response = await handler(request)
+        except Refusal as exc:
+            response = reply({"status": exc.status})
         except AuthFailure as exc:
             response = web.json_response({"status": exc.status}, status=exc.http_status)
         except web.HTTPException as exc:
@@ -129,7 +131,7 @@ def create_app(settings: Settings | None = None, *, pool=None) -> web.Applicatio
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["Content-Security-Policy"] = (
-            "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https: http: data:; connect-src 'self' "
+            "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' https: http: data:; connect-src 'self' "
             + settings["SUPABASE_URL"]
             + " "
             + settings.values.get("LIVEKIT_URL", "")
@@ -150,8 +152,10 @@ def create_app(settings: Settings | None = None, *, pool=None) -> web.Applicatio
 
     @web.middleware
     async def authenticated(request, handler):
-        if request.path not in public_paths and not request.path.startswith(
-            "/product/"
+        if (
+            request.path not in public_paths
+            and not request.path.startswith("/product/")
+            and not request.path.startswith("/assets/")
         ):
             request[USER] = await request.app[SERVICES].auth.authenticate(
                 request.headers.get("Authorization")
@@ -181,24 +185,73 @@ def create_app(settings: Settings | None = None, *, pool=None) -> web.Applicatio
         return reply({"status": "ok"})
 
     async def index(request):
-        return web.FileResponse(web_root / "index.html")
+        root = web_build if (web_build / "index.html").is_file() else web_root
+        return web.FileResponse(root / "index.html")
 
     async def asset(request):
         filename = request.match_info["filename"]
-        folder = (
-            web_root / "vendor"
-            if filename == "livekit-client-2.23.0.umd.js"
-            else web_root
+        if Path(filename).name != filename:
+            raise web.HTTPNotFound()
+        built = web_build / "assets" / filename
+        if built.is_file():
+            return web.FileResponse(built)
+        legacy_assets = {
+            "app.js": web_root / "app.js",
+            "styles.css": web_root / "styles.css",
+            "voice.js": web_root / "voice.js",
+            "livekit-client-2.23.0.umd.js": web_root
+            / "vendor"
+            / "livekit-client-2.23.0.umd.js",
+        }
+        if filename not in legacy_assets:
+            raise web.HTTPNotFound()
+        return web.FileResponse(legacy_assets[filename])
+
+    async def user_catalog(request):
+        selection = await catalog_options(request.app[SERVICES].pool, request[USER])
+        return Catalog(
+            request.app[SERVICES].pool,
+            UUID(selection["catalog_id"]),
+            request[USER],
+            selection["generation"],
         )
-        return web.FileResponse(folder / filename)
+
+    async def catalog_selection(request):
+        if request.method == "GET":
+            return reply(
+                await catalog_options(request.app[SERVICES].pool, request[USER])
+            )
+        data = await body(request, {"catalog_id"})
+        return reply(
+            await select_catalog(
+                request.app[SERVICES].pool, request[USER], data["catalog_id"]
+            )
+        )
+
+    async def memory_management(request):
+        memory = PreferenceMemory(request.app[SERVICES].pool, request[USER])
+        if request.method == "GET":
+            return reply(await memory.inspect())
+        data = await body(request, {"operation", "fact"}, {"revision"})
+        return reply(
+            await memory.change(
+                data["operation"],
+                data["fact"],
+                uuid4(),
+                expected_revision=data.get("revision"),
+            )
+        )
 
     async def voice_connect(request):
         await body(request, set())
+        selection = await catalog_options(request.app[SERVICES].pool, request[USER])
         return reply(
             voice_session(
                 settings,
                 request[USER],
                 request.headers["Authorization"].partition(" ")[2],
+                catalog_id=selection["catalog_id"],
+                generation=selection["generation"],
             )
         )
 
@@ -225,6 +278,7 @@ def create_app(settings: Settings | None = None, *, pool=None) -> web.Applicatio
             "availability",
             "limit",
             "offset",
+            "exclude_ids",
         }:
             raise web.HTTPBadRequest()
         try:
@@ -242,6 +296,7 @@ def create_app(settings: Settings | None = None, *, pool=None) -> web.Applicatio
             import json
 
             filters = json.loads(request.query.get("filters", "{}"))
+            excluded_ids = json.loads(request.query.get("exclude_ids", "[]"))
             minimum_rating = (
                 float(request.query["min_rating"])
                 if "min_rating" in request.query
@@ -250,7 +305,8 @@ def create_app(settings: Settings | None = None, *, pool=None) -> web.Applicatio
             offset = int(request.query.get("offset", "0"))
         except ValueError:
             raise web.HTTPBadRequest() from None
-        result = await request.app[SERVICES].catalog.search(
+        catalog = await user_catalog(request)
+        result = await catalog.search(
             request.query.get("query", ""),
             category=request.query.get("category", ""),
             max_price_paise=maximum,
@@ -261,21 +317,23 @@ def create_app(settings: Settings | None = None, *, pool=None) -> web.Applicatio
             availability=request.query.get("availability", "discoverable"),
             limit=limit,
             offset=offset,
+            exclude_ids=excluded_ids,
         )
         return reply(result)
 
     async def catalog_filters(request):
-        return reply(await request.app[SERVICES].catalog.filter_options())
+        catalog = await user_catalog(request)
+        return reply(await catalog.filter_options())
 
     async def catalog_get(request):
-        return reply(
-            await request.app[SERVICES].catalog.get(request.match_info["product_id"])
-        )
+        catalog = await user_catalog(request)
+        return reply(await catalog.get(request.match_info["product_id"]))
 
     async def catalog_compare(request):
         data = await body(request, {"product_ids"}, {"attributes"})
+        catalog = await user_catalog(request)
         return reply(
-            await request.app[SERVICES].catalog.compare(
+            await catalog.compare(
                 data["product_ids"], attributes=data.get("attributes")
             )
         )
@@ -433,13 +491,14 @@ def create_app(settings: Settings | None = None, *, pool=None) -> web.Applicatio
             web.get("/orders", index),
             web.get("/profile", index),
             web.get("/product/{page_product_id:[^/]{1,128}}", index),
-            web.get(
-                "/assets/{filename:app\\.js|voice\\.js|styles\\.css|livekit-client-2\\.23\\.0\\.umd\\.js}",
-                asset,
-            ),
+            web.get("/assets/{filename}", asset),
             web.get("/api/config", config),
             web.get("/health", health),
             web.get("/ready", ready),
+            web.get("/api/catalog-selection", catalog_selection),
+            web.post("/api/catalog-selection", catalog_selection),
+            web.get("/api/memory", memory_management),
+            web.post("/api/memory", memory_management),
             web.get("/api/catalog/search", catalog_search),
             web.post("/api/catalog/compare", catalog_compare),
             web.get("/api/catalog/filters", catalog_filters),

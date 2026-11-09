@@ -4,6 +4,7 @@ import time
 
 import psycopg
 from psycopg.rows import dict_row
+from psycopg.types.json import Jsonb
 from psycopg_pool import AsyncConnectionPool, PoolTimeout
 
 from src.catalog.filters import (
@@ -14,41 +15,53 @@ from src.catalog.filters import (
     filter_sql,
 )
 from src.catalog.products import product_result
+from src.catalog.selection import DEFAULT_CATALOG, selected_catalog
 from src.catalog.specifications import parse_specifications
+from src.state.session import Refusal
 
 SEARCH_SQL = """
 with query as (select websearch_to_tsquery('english', %(query)s) as terms)
-select p.*, i.available from public.products p
+select p.*, i.available, i.is_demo from public.products p
 left join public.demo_inventory i on i.product_id = p.uniq_id cross join query
-where discounted_price > 0
+where p.catalog_id = %(catalog_id)s
+  and not (p.uniq_id = any(%(exclude_ids)s))
+  and discounted_price > 0
   and discounted_price <> 'NaN'::numeric
   and (%(availability)s = 'all' or (%(availability)s = 'available' and i.available > 0)
        or (%(availability)s = 'out_of_stock' and i.available = 0)
        or (%(availability)s = 'unknown' and i.available is null)
        or (%(availability)s = 'discoverable' and (i.available is null or i.available > 0)))
-  and (%(query)s = '' or to_tsvector('english',
-      coalesce(product_name, '') || ' ' || coalesce(product_category_tree, '')
-  ) @@ query.terms)
+  and (%(query)s = '' or p.search_document @@ query.terms)
   and (%(category)s = '' or position(
       lower(%(category)s) in lower(coalesce(product_category_tree, ''))
   ) > 0)
   and (%(max_price)s::numeric is null or discounted_price <= %(max_price)s::numeric / 100)
   and (%(min_price)s::numeric is null or discounted_price >= %(min_price)s::numeric / 100)
 __FACETS__
+  and not exists(select 1 from jsonb_each_text(%(extra_filters)s::jsonb) f
+      where not exists(select 1 from jsonb_each(p.attributes) a
+          where lower(a.key) = lower(f.key) and exists(select 1 from jsonb_array_elements_text(a.value) v where lower(v) = lower(f.value))))
   and (%(min_rating)s::numeric is null or (__RATING__) >= %(min_rating)s::numeric)
 order by case when %(sort_by)s = 'price_asc' then discounted_price end asc,
 case when %(sort_by)s = 'price_desc' then discounted_price end desc,
 case when %(sort_by)s = 'rating_desc' then (__RATING__) end desc nulls last,
 case when %(sort_by)s = 'newest' then crawl_timestamp end desc nulls last,
-ts_rank(to_tsvector('english',
-    coalesce(product_name, '') || ' ' || coalesce(product_category_tree, '')
-), query.terms) desc, discounted_price, uniq_id
+ts_rank(p.search_document, query.terms) desc, discounted_price, uniq_id
 limit %(limit)s offset %(offset)s
 """.replace("__FACETS__", filter_sql()).replace("__RATING__", RATING_SQL)
 
 
 class Catalog:
-    def __init__(self, pool: AsyncConnectionPool):
+    def __init__(
+        self,
+        pool: AsyncConnectionPool,
+        catalog_id=DEFAULT_CATALOG,
+        user_id=None,
+        generation=None,
+    ):
+        self.catalog_id = catalog_id
+        self.user_id = user_id
+        self.generation = generation
         self.pool = pool
         self._filter_cache = None
         self._filter_expires = 0
@@ -61,10 +74,20 @@ class Catalog:
                 self.pool.connection(timeout=3) as connection,
                 connection.cursor(row_factory=dict_row) as cursor,
             ):
+                params = {**params, "catalog_id": self.catalog_id}
+                if self.user_id is not None:
+                    connection.row_factory = dict_row
+                    selection = await selected_catalog(connection, self.user_id)
+                    if (
+                        selection["catalog_id"] != self.catalog_id
+                        or self.generation is not None
+                        and selection["generation"] != self.generation
+                    ):
+                        return None
                 await cursor.execute("set local statement_timeout = '5s'")
                 await cursor.execute(query, params)
                 return await cursor.fetchall()
-        except (psycopg.Error, PoolTimeout, TimeoutError):
+        except (psycopg.Error, PoolTimeout, TimeoutError, Refusal):
             return None
 
     async def search(
@@ -80,12 +103,22 @@ class Catalog:
         availability: str = "discoverable",
         limit: int = 5,
         offset: int = 0,
+        exclude_ids: list[str] | None = None,
     ) -> dict:
         filters = {} if filters is None else filters
+        exclude_ids = [] if exclude_ids is None else exclude_ids
         if (
-            not isinstance(filters, dict)
+            not isinstance(exclude_ids, list)
+            or len(exclude_ids) > 200
             or any(
-                key not in ATTRIBUTES or not isinstance(value, str) or len(value) > 100
+                not isinstance(p, str) or not 1 <= len(p) <= 128 for p in exclude_ids
+            )
+            or not isinstance(filters, dict)
+            or any(
+                not isinstance(key, str)
+                or not 1 <= len(key) <= 80
+                or not isinstance(value, str)
+                or len(value) > 100
                 for key, value in filters.items()
             )
             or availability
@@ -127,6 +160,14 @@ class Catalog:
             SEARCH_SQL,
             {
                 "query": query.strip(),
+                "exclude_ids": exclude_ids,
+                "extra_filters": Jsonb(
+                    {
+                        key: value
+                        for key, value in filters.items()
+                        if key not in ATTRIBUTES
+                    }
+                ),
                 "category": category.strip(),
                 "max_price": max_price_paise,
                 "min_price": min_price_paise,
@@ -149,6 +190,7 @@ class Catalog:
             "products": [product_result(row) for row in rows[:limit]],
             "has_more": len(rows) > limit,
             "offset": offset,
+            "catalog_id": str(self.catalog_id),
         }
 
     async def filter_options(self):
@@ -167,7 +209,7 @@ class Catalog:
     async def _load_filter_options(self):
 
         rows = await self._fetch(
-            "select product_category_tree, product_specifications from public.products limit 50000",
+            "select product_category_tree, product_specifications from public.products where catalog_id = %(catalog_id)s limit 50000",
             {},
         )
         if rows is None:
@@ -193,6 +235,12 @@ class Catalog:
                         values[name].update(
                             value for value in entries if len(value) <= 100
                         )
+                if not any(
+                    key.casefold() in aliases for aliases in ATTRIBUTES.values()
+                ):
+                    values.setdefault(key.casefold(), Counter()).update(
+                        value for value in entries if len(value) <= 100
+                    )
         return {
             "status": "ok",
             "filters": {
@@ -212,8 +260,8 @@ class Catalog:
         ):
             return {"status": "invalid_input", "product": None}
         rows = await self._fetch(
-            "select p.*, i.available from public.products p left join public.demo_inventory i "
-            "on i.product_id = p.uniq_id where p.uniq_id = %(id)s",
+            "select p.*, i.available, i.is_demo from public.products p left join public.demo_inventory i "
+            "on i.product_id = p.uniq_id where p.catalog_id = %(catalog_id)s and p.uniq_id = %(id)s",
             {"id": product_id.strip()},
         )
         if rows is None:
@@ -254,8 +302,8 @@ class Catalog:
         if len(set(ids)) != len(ids):
             return {"status": "invalid_input", **empty}
         rows = await self._fetch(
-            "select p.*, i.available from public.products p left join public.demo_inventory i "
-            "on i.product_id = p.uniq_id where p.uniq_id = any(%(ids)s)",
+            "select p.*, i.available, i.is_demo from public.products p left join public.demo_inventory i "
+            "on i.product_id = p.uniq_id where p.catalog_id = %(catalog_id)s and p.uniq_id = any(%(ids)s)",
             {"ids": ids},
         )
         if rows is None:
@@ -304,7 +352,7 @@ class Catalog:
                 }
                 for key in keys
             ],
-            "specification_basis": "historical_catalog",
+            "specification_basis": "catalog_source",
             "price_difference_paise": max(prices) - min(prices) if known else None,
             "lowest_priced_ids": [
                 p["id"] for p in products if p["price_paise"] == min(prices)

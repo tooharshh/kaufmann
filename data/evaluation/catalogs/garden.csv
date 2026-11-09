@@ -1,0 +1,3 @@
+item_code,label,amount,units,properties
+seed-1,Herb seed kit,199,8,"{""plant type"":""herb""}"
+tool-1,Garden trowel,349,4,"{""material"":""steel""}"

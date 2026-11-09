@@ -7,7 +7,50 @@ from src.voice.presentation import voice_result
 
 class CatalogTools:
     @function_tool(
-        description="Search concrete English product keywords inferred from intent, never the whole sentence. Spaces require all terms; uppercase OR means alternatives; minus excludes a term. For gifts choose plausible types such as mug OR photo frame OR notebook. Put price ceilings in max_price_paise, not query text. category is a literal category substring. Use filters for listed attributes; all supplied filters are combined. min_rating is zero to five. availability supports discoverable, all, available, out_of_stock, unknown. sort_by supports relevance, price_asc, price_desc, rating_desc, newest. Use catalog_filter_options for unfamiliar values. When asked for more, different, or rejected suggestions, preserve constraints and advance offset by three instead of repeating the first page. At end of results, vary plausible product types while preserving hard constraints. Never broaden on unavailable. Returns source facts and ordered IDs; never invent results."
+        description="Persist the current task before searching or following up. Preserve omitted fields. Record recipient, explicit budget in paise, product type, requirements and exclusions from English, Telugu script, Romanized Telugu or mixed input. Corrections replace only the named constraint. This is temporary task context, not durable memory."
+    )
+    async def update_shopping_task(
+        self,
+        context: RunContext,
+        recipient: str | None = None,
+        budget_paise: int | None = None,
+        product_type: str | None = None,
+        requirements: list[str] | None = None,
+        exclusions: list[str] | None = None,
+    ):
+        task = dict((self.runtime.state or {}).get("shopping_task", {}))
+        constraints = dict(task.get("constraints", {}))
+        for key, value in {
+            "recipient": recipient,
+            "budget_paise": budget_paise,
+            "product_type": product_type,
+            "requirements": requirements,
+            "exclusions": exclusions,
+        }.items():
+            if value is not None:
+                constraints[key] = value
+        return voice_result(
+            await self.runtime.mutate(
+                context.speech_handle,
+                "update_context",
+                shopping_task={
+                    **task,
+                    "original_input": self.runtime.request[:2000],
+                    "constraints": constraints,
+                },
+            )
+        )
+
+    @function_tool(
+        description="Reject the current recommendations and show different products while preserving constraints. Records rejected product IDs so changing query or reconnecting does not repeat them. Use for different suggestions or explicit rejection; use show_more_products only for pagination."
+    )
+    async def different_products(self, context: RunContext):
+        return voice_result(
+            await self.runtime.reject_recommendations(context.speech_handle)
+        )
+
+    @function_tool(
+        description="Search concrete English product keywords inferred from intent, never the whole sentence. Spaces require all terms; uppercase OR means alternatives; minus excludes a term. For gifts derive plausible types from catalog_filter_options. Put price ceilings in max_price_paise, not query text. category is a literal category substring. Use filters for listed attributes; all supplied filters are combined. min_rating is zero to five. availability supports discoverable, all, available, out_of_stock, unknown. sort_by supports relevance, price_asc, price_desc, rating_desc, newest. Use catalog_filter_options for unfamiliar values. When asked for more, different, or rejected suggestions, preserve constraints and advance offset by three instead of repeating the first page. At end of results, vary plausible product types while preserving hard constraints. Never broaden on unavailable. Returns source facts and ordered IDs; never invent results."
     )
     async def search_products(
         self,

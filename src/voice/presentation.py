@@ -1,6 +1,8 @@
 PRIVATE_FIELDS = frozenset(
     {
         "pending_token",
+        "proposal_token",
+        "token_hash",
         "exception_token",
         "session_id",
         "turn_seq",

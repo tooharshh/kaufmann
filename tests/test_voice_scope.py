@@ -17,9 +17,15 @@ from src.voice.runtime import VoiceRuntime
 def test_every_phase_keeps_scope_and_exposes_only_shopping_tools():
     expected = {
         "shopping_state",
+        "inspect_memory",
+        "manage_memory",
+        "update_shopping_task",
+        "different_products",
+        "propose_delivery_address",
+        "approve_delivery_address",
+        "cancel_delivery_address",
+        "save_delivery_address",
         "profile_details",
-        "update_profile_details",
-        "save_profile_address",
         "save_preference",
         "focus_shopping",
         "search_products",
@@ -34,7 +40,6 @@ def test_every_phase_keeps_scope_and_exposes_only_shopping_tools():
         "set_budget",
         "approve_budget_exception",
         "category_guidance",
-        "set_address",
         "review_order",
         "confirm_order",
         "cancel_order_review",
@@ -43,6 +48,25 @@ def test_every_phase_keeps_scope_and_exposes_only_shopping_tools():
         agent = cls(None)
         assert agent.instructions.startswith(SHOPPING_SCOPE)
         assert {tool.id for tool in agent.tools} <= expected
+
+
+def test_voice_cannot_mutate_profile_or_recipient_details():
+    blocked = {"update_profile_details", "save_profile_address", "set_address"}
+    for cls in (Concierge, ShoppingAdvisor, CartAgent, CheckoutAgent):
+        agent = cls(None)
+        assert not ({tool.id for tool in agent.tools} & blocked)
+        assert "later approval before applying" in agent.instructions
+
+
+def test_prompts_cover_emotional_gifts_and_checkout_readiness():
+    discovery = ShoppingAdvisor(None).instructions
+    checkout = CheckoutAgent(None).instructions
+    assert '"sad gifts"' in discovery.lower()
+    assert '"happy gifts"' in discovery.lower()
+    assert "Diwali" in discovery
+    assert "Holi" in discovery
+    assert "anything else added" in checkout
+    assert "say they are ready" in checkout
 
 
 def test_voice_projection_omits_private_tokens_without_mutating_engine_result():

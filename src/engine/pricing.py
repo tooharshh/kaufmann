@@ -10,11 +10,16 @@ def cart_item(row: dict) -> dict:
     return {
         "product_id": row["product_id"],
         "name": row["product_name"],
+        "price_basis": "imported_catalog"
+        if row.get("provenance")
+        else "historical_catalog",
         "quantity": row["quantity"],
         "unit_price_paise": price,
         "line_total_paise": price * row["quantity"] if price is not None else None,
         "available": row["available"],
-        "stock_basis": "demo" if row["available"] is not None else "unknown",
+        "stock_basis": ("demo" if row.get("is_demo", True) else "source")
+        if row["available"] is not None
+        else "unknown",
     }
 
 
@@ -44,7 +49,9 @@ def quote(items: list[dict], *, check_stock: bool = True) -> dict:
         ],
         "total_paise": sum(item["line_total_paise"] for item in items),
         "currency": "INR",
-        "price_basis": "historical_catalog",
+        "price_basis": "imported_catalog"
+        if any(item.get("price_basis") == "imported_catalog" for item in items)
+        else "historical_catalog",
         "is_demo": True,
     }
 

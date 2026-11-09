@@ -20,17 +20,29 @@ def product_result(row: dict, *, details: bool = False) -> dict:
     result = {
         "id": row["uniq_id"],
         "name": row["product_name"],
-        "name_te": None,
+        "name_te": row.get("name_te"),
+        "catalog_id": str(
+            row.get("catalog_id", "00000000-0000-0000-0000-000000000001")
+        ),
+        "source_product_id": row.get("source_product_id") or row["uniq_id"],
+        "brand": row.get("brand"),
+        "description": row.get("description"),
+        "attributes": row.get("attributes", {}),
+        "variants": row.get("variants"),
         "category_path": categories[0].split(" >> ") if categories else [],
         "price_paise": price,
         "currency": "INR",
-        "price_basis": "historical_catalog",
+        "price_basis": "imported_catalog"
+        if row.get("provenance")
+        else "historical_catalog",
         "price_status": "priced" if price is not None else "unpriced",
         "stock_status": ("available" if row["available"] > 0 else "out_of_stock")
         if row.get("available") is not None
         else "unknown",
         "available_quantity": row.get("available"),
-        "stock_basis": "demo" if row.get("available") is not None else "unknown",
+        "stock_basis": ("demo" if row.get("is_demo", True) else "source")
+        if row.get("available") is not None
+        else "unknown",
         "rating": rating,
         "images": parse_list(row.get("image") or "")[:3],
     }
@@ -38,7 +50,7 @@ def product_result(row: dict, *, details: bool = False) -> dict:
         result["specifications"] = parse_specifications(
             row.get("product_specifications")
         )
-        result["specification_basis"] = "historical_catalog"
+        result["specification_basis"] = result["price_basis"]
         result["specifications_raw"] = row.get("product_specifications")
         result["product_url"] = row.get("product_url")
         timestamp = row.get("crawl_timestamp")

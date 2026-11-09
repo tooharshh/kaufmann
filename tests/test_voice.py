@@ -149,18 +149,12 @@ def test_sdk_turns_handoffs_and_tools_use_persisted_state():
                 model.steps.extend(
                     [
                         ("focus_shopping", {"phase": "checkout"}),
-                        (
-                            "set_address",
-                            {
-                                key: value
-                                for key, value in ADDRESS.items()
-                                if key != "country"
-                            },
-                        ),
                         "Address saved.",
                     ]
                 )
-                await session.run(user_input="Deliver to my Hyderabad address.")
+                state = (await engines[0].get_state())["state"]
+                await engines[0].set_address(ADDRESS, state["version"])
+                await session.run(user_input="Use the address I saved on screen.")
                 state = (await engines[0].get_state())["state"]
                 assert state["budget_paise"] == 25000
                 assert state["address"] == ADDRESS

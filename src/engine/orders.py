@@ -13,6 +13,8 @@ class CheckoutMixin:
         async def prepare(connection, session):
             if not session["latest_message_id"]:
                 raise Refusal("user_turn_required")
+            if session["pending_address"]:
+                raise Refusal("address_approval_required")
             items = await self._items(connection, session)
             if not items:
                 raise Refusal("empty_cart")
@@ -27,6 +29,7 @@ class CheckoutMixin:
                 return await self._budget_proposal(
                     connection, session, snapshot, kind="checkout"
                 )
+            snapshot["catalog_id"] = str(session["catalog_id"])
             snapshot["address"] = session["address"]
             snapshot["version"] = session["version"]
             token = secrets.token_urlsafe(32)
@@ -110,6 +113,7 @@ class CheckoutMixin:
             )
             snapshot = quote(await self._items(connection, session))
             require_address(session["address"])
+            snapshot["catalog_id"] = str(session["catalog_id"])
             snapshot["address"] = session["address"]
             snapshot["version"] = session["version"]
             if snapshot != pending["snapshot"]:
@@ -125,8 +129,8 @@ class CheckoutMixin:
                 return {"status": "price_changed"}
             order_id = uuid4()
             await connection.execute(
-                "insert into public.orders (id, user_id, session_id, confirmation_hash, total_paise, address, snapshot) "
-                "values (%s, %s, %s, %s, %s, %s, %s)",
+                "insert into public.orders (id, user_id, session_id, confirmation_hash, total_paise, address, snapshot, catalog_id) "
+                "values (%s, %s, %s, %s, %s, %s, %s, %s)",
                 (
                     order_id,
                     self.user_id,
@@ -135,6 +139,7 @@ class CheckoutMixin:
                     snapshot["total_paise"],
                     Jsonb(snapshot["address"]),
                     Jsonb(snapshot),
+                    session["catalog_id"],
                 ),
             )
             async with connection.cursor() as cursor:

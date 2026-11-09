@@ -16,6 +16,7 @@ from src.catalog.search import Catalog
 from src.config import Settings
 from src.db.connection import create_pool
 from src.engine.cart import CommerceEngine
+from src.state.memory import MemoryQueue, PreferenceMemory, extract_candidates
 from src.voice.access import AGENT_NAME, verify_dispatch_context
 from src.voice.latency import observe_latency, observe_provider
 from src.voice.navigation import BrowserBridge
@@ -49,12 +50,46 @@ async def entrypoint(ctx: agents.JobContext):
             http, settings["SUPABASE_URL"], settings["SUPABASE_PUBLISHABLE_KEY"]
         )
         runtime = VoiceRuntime(
-            CommerceEngine(pool, user_id),
-            Catalog(pool),
+            CommerceEngine(
+                pool, user_id, dispatch["catalog_id"], dispatch["generation"]
+            ),
+            Catalog(pool, dispatch["catalog_id"], user_id, dispatch["generation"]),
             profile_auth,
             dispatch["access_token"],
         )
+        runtime.memory = PreferenceMemory(pool, user_id)
+        runtime.memory_queue = MemoryQueue(
+            runtime.memory,
+            lambda text: extract_candidates(http, settings["CEREBRAS_API_KEY"], text),
+        )
         session = create_voice_session(settings, runtime)
+        memory_turns = set()
+
+        def remember_completed_turn(event):
+            item = event.item
+            if (
+                getattr(item, "role", None) == "assistant"
+                and not getattr(item, "interrupted", False)
+                and runtime.message_id
+                and runtime.message_id not in memory_turns
+            ):
+                memory_turns.add(runtime.message_id)
+                runtime.memory_queue.submit(
+                    runtime.request, runtime.message_id, runtime.memory_revision
+                )
+
+        session.on("conversation_item_added", remember_completed_turn)
+
+        async def watch_catalog():
+            while True:
+                await asyncio.sleep(2)
+                result = await runtime.engine.get_state()
+                if result["status"] == "catalog_changed":
+                    await session.aclose()
+                    ctx.shutdown(reason="Catalog changed; reconnect voice")
+                    return
+
+        catalog_watch = asyncio.create_task(watch_catalog())
         session.on("conversation_item_added", observe_latency)
         for provider in (session.llm, session.stt, session.tts):
             provider.on("metrics_collected", observe_provider)
@@ -80,6 +115,9 @@ async def entrypoint(ctx: agents.JobContext):
         session.tts.prewarm()
 
         async def cleanup():
+            catalog_watch.cancel()
+            await asyncio.gather(catalog_watch, return_exceptions=True)
+            await runtime.memory_queue.close()
             await bridge.close()
             await runtime.cancel_review()
             await http.close()

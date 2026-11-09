@@ -113,14 +113,8 @@ def test_http_boundaries_fail_closed_without_exposing_details():
             voice = await client.post(
                 "/api/voice/session", headers={"Authorization": "Bearer valid"}, json={}
             )
-            assert voice.status == 200
-            assert set(await voice.json()) == {
-                "status",
-                "url",
-                "token",
-                "room",
-                "identity",
-            }
+            assert voice.status == 503
+            assert await voice.json() == {"status": "unavailable"}
             assert (
                 await client.post(
                     "/api/voice/session",

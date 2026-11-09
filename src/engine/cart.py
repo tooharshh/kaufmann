@@ -6,14 +6,21 @@ import psycopg
 from psycopg.rows import dict_row
 from psycopg_pool import PoolTimeout
 
+from src.catalog.selection import selected_catalog
+from src.engine.delivery import DeliveryMixin
 from src.engine.orders import CheckoutMixin
 from src.engine.pricing import budget_digest, cart_item, quote
+from src.state.discovery import discovery_task
 from src.state.persistence import load_session, save_session
 from src.state.session import Refusal, address_patch, token_hash, valid_uuid
 
 
-class CommerceEngine(CheckoutMixin):
-    def __init__(self, pool, authenticated_user_id: UUID):
+class CommerceEngine(DeliveryMixin, CheckoutMixin):
+    def __init__(
+        self, pool, authenticated_user_id: UUID, catalog_id=None, generation=None
+    ):
+        self.catalog_id = valid_uuid(catalog_id) if catalog_id is not None else None
+        self.generation = generation
         self.pool = pool
         self.user_id = valid_uuid(authenticated_user_id)
 
@@ -33,7 +40,16 @@ class CommerceEngine(CheckoutMixin):
             ):
                 connection.row_factory = dict_row
                 await connection.execute("set local statement_timeout = '10s'")
-                session = await load_session(connection, self.user_id)
+                selection = await selected_catalog(connection, self.user_id)
+                if self.catalog_id is not None and (
+                    selection["catalog_id"] != self.catalog_id
+                    or self.generation is not None
+                    and selection["generation"] != self.generation
+                ):
+                    return {"status": "catalog_changed"}
+                session = await load_session(
+                    connection, self.user_id, selection["catalog_id"]
+                )
                 try:
                     if mutation:
                         self._version(session, expected)
@@ -42,12 +58,14 @@ class CommerceEngine(CheckoutMixin):
                     result = {"status": exc.status}
                 result["state"] = await self._view(connection, session)
                 return result
+        except Refusal as exc:
+            return {"status": exc.status}
         except (psycopg.Error, PoolTimeout, TimeoutError):
             return {"status": "unavailable"}
 
     async def _items(self, connection, session):
         cursor = await connection.execute(
-            "select c.product_id, c.quantity, p.product_name, p.discounted_price, i.available "
+            "select c.product_id, c.quantity, p.product_name, p.discounted_price, p.provenance, i.available, i.is_demo "
             "from public.cart_items c join public.products p on p.uniq_id = c.product_id "
             "left join public.demo_inventory i on i.product_id = c.product_id "
             "where c.session_id = %s order by c.product_id",
@@ -69,12 +87,15 @@ class CommerceEngine(CheckoutMixin):
         last_order = await cursor.fetchone()
         return {
             "session_id": str(session["id"]),
+            "catalog_id": str(session["catalog_id"]),
             "version": session["version"],
             "budget_paise": session["budget_paise"],
             "address": session["address"],
             "instructions": session["instructions"],
             "language": session["language"],
             "result_ids": session["result_ids"],
+            "shopping_task": session["shopping_task"],
+            "pending_address": session["pending_address"] is not None,
             "items": items,
             "total_paise": total,
             "currency": "INR",
@@ -129,10 +150,10 @@ class CommerceEngine(CheckoutMixin):
         candidate = [item for item in items if item["product_id"] != product_id]
         if quantity:
             cursor = await connection.execute(
-                "select p.uniq_id as product_id, p.product_name, p.discounted_price, i.available, %s::integer as quantity "
+                "select p.uniq_id as product_id, p.product_name, p.discounted_price, p.provenance, i.available, i.is_demo, %s::integer as quantity "
                 "from public.products p left join public.demo_inventory i on i.product_id = p.uniq_id "
-                "where p.uniq_id = %s",
-                (quantity, product_id),
+                "where p.uniq_id = %s and p.catalog_id = %s",
+                (quantity, product_id, session["catalog_id"]),
             )
             row = await cursor.fetchone()
             if row is None:
@@ -144,9 +165,9 @@ class CommerceEngine(CheckoutMixin):
     async def _write_quantity(connection, session, product_id, quantity):
         if quantity:
             await connection.execute(
-                "insert into public.cart_items (session_id, product_id, quantity) values (%s, %s, %s) "
+                "insert into public.cart_items (session_id, product_id, quantity, catalog_id) values (%s, %s, %s, %s) "
                 "on conflict (session_id, product_id) do update set quantity = excluded.quantity",
-                (session["id"], product_id, quantity),
+                (session["id"], product_id, quantity, session["catalog_id"]),
             )
         else:
             await connection.execute(
@@ -338,6 +359,7 @@ class CommerceEngine(CheckoutMixin):
         remove_instruction=None,
         language=None,
         result_ids=None,
+        shopping_task=None,
     ):
         async def change(connection, session):
             updates = {}
@@ -384,13 +406,15 @@ class CommerceEngine(CheckoutMixin):
                 ):
                     raise Refusal("invalid_input")
                 cursor = await connection.execute(
-                    "select uniq_id from public.products where uniq_id = any(%s)",
-                    (result_ids,),
+                    "select uniq_id from public.products where uniq_id = any(%s) and catalog_id = %s",
+                    (result_ids, session["catalog_id"]),
                 )
                 if len(await cursor.fetchall()) != len(result_ids):
                     raise Refusal("not_found")
                 if result_ids != session["result_ids"]:
                     updates["result_ids"] = result_ids
+            if shopping_task is not None:
+                updates["shopping_task"] = discovery_task(shopping_task)
             if updates:
                 await save_session(
                     connection, session, updates, bump=True, invalidate=True

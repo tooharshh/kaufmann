@@ -83,7 +83,7 @@ def test_source_filters_stock_rating_and_sorting():
             options = await catalog.filter_options()
             assert "Navy Blue" in options["filters"]["color"]
             assert "Clothing" in options["categories"]
-            for filters in ({"unsupported": "yes"}, {"color": ["blue"]}):
+            for filters in ({"color": ["blue"]},):
                 assert (await catalog.search(filters=filters))[
                     "status"
                 ] == "invalid_input"

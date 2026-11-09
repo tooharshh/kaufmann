@@ -2,7 +2,12 @@ import asyncio
 import json
 from uuid import NAMESPACE_URL, uuid4, uuid5
 
+import psycopg
+from psycopg_pool import PoolTimeout
+
+from src.auth import AuthFailure
 from src.catalog.search import Catalog
+from src.language.requests import amount_guard, model_request_aids, request_aids
 from src.voice.latency import timed
 from src.voice.presentation import voice_result
 
@@ -17,6 +22,11 @@ class VoiceRuntime:
         self.request = ""
         self.budget_token = None
         self.review_token = None
+        self.address_token = None
+        self.memory = None
+        self.memory_queue = None
+        self.memory_facts = []
+        self.memory_revision = 0
         self.review_version = None
         self.speech_turns = {}
         self.publish_navigation = None
@@ -38,6 +48,8 @@ class VoiceRuntime:
             user = await user_request(
                 self.profile_auth, self.profile_authorization, self.profile_owner
             )
+        except AuthFailure as exc:
+            return {"status": exc.status}
         except (ValueError, TypeError, KeyError, TimeoutError):
             return {"status": "unavailable"}
         return {"status": "ok", "profile": profile_view(user)}
@@ -57,19 +69,79 @@ class VoiceRuntime:
                 data,
                 current["profile"]["revision"],
             )
+        except AuthFailure as exc:
+            return {"status": exc.status}
         except (ValueError, TypeError, KeyError, TimeoutError):
             return {"status": "unavailable"}
 
     def remember(self, result):
+        old_task = (self.state or {}).get("shopping_task", {})
         if "state" in result:
             self.state = result["state"]
+            if old_task and not self.state.get("shopping_task"):
+                self.focused_product = None
         if result.get("exception_token"):
             self.budget_token = result["exception_token"]
         if self.state and not self.state["pending_budget_exception"]:
             self.budget_token = None
         if self.state and not self.state["pending_review"]:
             self.review_token = None
+        if result.get("proposal_token"):
+            self.address_token = result["proposal_token"]
+        if self.state and not self.state.get("pending_address"):
+            self.address_token = None
+        task = (self.state or {}).get("shopping_task", {})
+        if task.get("search_arguments"):
+            self.last_search_arguments = task["search_arguments"]
+            self.last_search_offset = self.last_search_arguments.get("offset", 0)
+            self.last_search_signature = self.search_signature(
+                self.last_search_arguments
+            )
+        elif self.state is not None and "shopping_task" in self.state:
+            self.last_search_arguments = None
+            self.last_search_signature = None
+            self.last_search_offset = 0
         return result
+
+    @staticmethod
+    def search_signature(arguments):
+        return tuple(
+            (key, json.dumps(arguments.get(key), sort_keys=True))
+            for key in (
+                "query",
+                "category",
+                "max_price_paise",
+                "min_price_paise",
+                "sort_by",
+                "filters",
+                "min_rating",
+                "availability",
+            )
+        )
+
+    async def refresh_memory(self):
+        if self.memory:
+            try:
+                task = (
+                    (self.state or {}).get("shopping_task", {}).get("constraints", {})
+                )
+                result = await self.memory.relevant(
+                    request_aids(self.request)["lexical_gloss"]
+                    + " "
+                    + task.get("product_type", ""),
+                    recipient=task.get("recipient"),
+                )
+                self.memory_facts = result["facts"]
+                self.memory_revision = result["revision"]
+            except (
+                ValueError,
+                TypeError,
+                KeyError,
+                psycopg.Error,
+                PoolTimeout,
+                TimeoutError,
+            ):
+                self.memory_facts = []
 
     @timed("runtime.begin_turn")
     async def begin_turn(self, message):
@@ -85,6 +157,7 @@ class VoiceRuntime:
                     return result
                 self.message_id = message_id
                 self.request = message.text_content or ""
+                await self.refresh_memory()
             else:
                 result = {"status": "ok", "state": self.state}
             return result
@@ -92,7 +165,25 @@ class VoiceRuntime:
     @timed("runtime.refresh")
     async def refresh(self):
         async with self.lock:
-            return self.remember(await self.engine.get_state())
+            reconnecting = self.state is None
+            result = self.remember(await self.engine.get_state())
+            if (
+                reconnecting
+                and result["status"] == "ok"
+                and self.state.get("pending_address")
+            ):
+                # A new transport cannot inherit permission from an old spoken proposal.
+                result = self.remember(
+                    await self.engine.cancel_address(self.state["version"])
+                )
+            selected = (
+                (self.state or {}).get("shopping_task", {}).get("selected_product_id")
+            )
+            if selected and self.focused_product is None:
+                product = await self.catalog.get(selected)
+                if product["status"] == "ok":
+                    self.focused_product = product["product"]
+            return result
 
     def bind_speech(self, handle):
         if handle and handle.id not in self.speech_turns:
@@ -111,6 +202,9 @@ class VoiceRuntime:
         async with self.lock:
             if not self.allowed(handle) or self.state is None:
                 return {"status": "user_turn_required"}
+            validation = amount_guard(self.request, operation, arguments)
+            if validation:
+                return validation
             if operation == "approve_budget_exception":
                 if not self.budget_token:
                     return {"status": "stale_exception"}
@@ -122,6 +216,12 @@ class VoiceRuntime:
                     return {"status": "stale_token"}
                 arguments.update(
                     token=self.review_token, approval_message_id=self.message_id
+                )
+            if operation == "approve_address":
+                if not self.address_token:
+                    return {"status": "stale_proposal"}
+                arguments.update(
+                    token=self.address_token, approval_message_id=self.message_id
                 )
             result = self.remember(
                 await getattr(self.engine, operation)(
@@ -155,23 +255,21 @@ class VoiceRuntime:
         async with self.lock:
             if not self.allowed(handle) or self.state is None:
                 return {"status": "user_turn_required"}
-            signature = tuple(
-                (key, json.dumps(arguments.get(key), sort_keys=True))
-                for key in (
-                    "query",
-                    "category",
-                    "max_price_paise",
-                    "min_price_paise",
-                    "sort_by",
-                    "filters",
-                    "min_rating",
-                    "availability",
+            task = dict(self.state.get("shopping_task", {}))
+            ceiling = task.get("constraints", {}).get("budget_paise")
+            if ceiling is not None:
+                requested_ceiling = arguments.get("max_price_paise")
+                arguments["max_price_paise"] = (
+                    min(ceiling, requested_ceiling)
+                    if requested_ceiling is not None
+                    else ceiling
                 )
-            )
+            signature = self.search_signature(arguments)
             requested_offset = arguments.get("offset", 0)
             if signature == self.last_search_signature and requested_offset == 0:
                 requested_offset = self.last_search_offset + arguments.get("limit", 3)
             arguments["offset"] = requested_offset
+            arguments["exclude_ids"] = task.get("rejected_ids", [])
             result = await self.catalog.search(**arguments)
             if result["status"] not in {"ok", "not_found"}:
                 return result
@@ -185,6 +283,11 @@ class VoiceRuntime:
                 await self.engine.update_context(
                     self.state["version"],
                     result_ids=[product["id"] for product in result["products"]],
+                    shopping_task={
+                        **task,
+                        "original_input": self.request[:2000],
+                        "search_arguments": arguments,
+                    },
                 )
             )
             if saved["status"] != "ok":
@@ -204,6 +307,7 @@ class VoiceRuntime:
                     "min_price_paise": arguments.get("min_price_paise"),
                     "sort_by": arguments.get("sort_by", "relevance"),
                     "filters": arguments.get("filters") or {},
+                    "exclude_ids": arguments.get("exclude_ids", []),
                     "min_rating": arguments.get("min_rating"),
                     "availability": arguments.get("availability", "discoverable"),
                     "offset": requested_offset,
@@ -220,6 +324,25 @@ class VoiceRuntime:
             return {"status": "not_found", "products": [], "has_more": False}
         arguments = dict(self.last_search_arguments)
         arguments["offset"] = self.last_search_offset + arguments.get("limit", 3)
+        return await self.search(handle, **arguments)
+
+    async def reject_recommendations(self, handle):
+        if not self.allowed(handle) or not self.state:
+            return {"status": "user_turn_required"}
+        task = dict(self.state.get("shopping_task", {}))
+        rejected = list(
+            dict.fromkeys([*task.get("rejected_ids", []), *self.state["result_ids"]])
+        )
+        if len(rejected) > 200:
+            return {"status": "task_limit"}
+        saved = await self.mutate(
+            handle, "update_context", shopping_task={**task, "rejected_ids": rejected}
+        )
+        if saved["status"] != "ok":
+            return saved
+        arguments = dict(self.last_search_arguments or {})
+        arguments["offset"] = 0
+        self.last_search_signature = None
         return await self.search(handle, **arguments)
 
     async def search_closest(self, handle, *, relax_fields, filters=None, **arguments):
@@ -265,6 +388,17 @@ class VoiceRuntime:
         if handle is not None and not self.allowed(handle):
             return {"status": "user_turn_required"}
         if result["status"] == "ok":
+            if handle is not None:
+                saved = await self.mutate(
+                    handle,
+                    "update_context",
+                    shopping_task={
+                        **self.state.get("shopping_task", {}),
+                        "selected_product_id": product_id,
+                    },
+                )
+                if saved["status"] != "ok":
+                    return saved
             self.focused_product = result["product"]
             result["navigation_status"] = await self.navigate(
                 {
@@ -295,7 +429,12 @@ class VoiceRuntime:
             else:
                 saved = self.remember(
                     await self.engine.update_context(
-                        self.state["version"], result_ids=[product_id]
+                        self.state["version"],
+                        result_ids=[product_id],
+                        shopping_task={
+                            **self.state.get("shopping_task", {}),
+                            "selected_product_id": product_id,
+                        },
                     )
                 )
             if saved["status"] == "ok":
@@ -345,7 +484,9 @@ class VoiceRuntime:
             {
                 "state": voice_result(self.state),
                 "current_user_request": self.request,
+                "request_language_aids": model_request_aids(self.request),
                 "selected_product": voice_result(self.focused_product),
+                "remembered_preferences": self.memory_facts,
             },
             ensure_ascii=False,
         )
