@@ -1,7 +1,35 @@
 from decimal import Decimal, InvalidOperation
+from urllib.parse import urlsplit, urlunsplit
 
 from src.catalog.ingest import parse_list, parse_price
 from src.catalog.specifications import parse_specifications
+
+
+def product_images(raw: str) -> list[str]:
+    images = []
+    for value in parse_list(raw):
+        try:
+            url = urlsplit(value)
+            if (
+                url.scheme not in {"http", "https"}
+                or not url.hostname
+                or url.username
+                or url.password
+            ):
+                continue
+            if url.hostname in {
+                "img5a.flixcart.com",
+                "img6a.flixcart.com",
+            } and url.path.startswith("/image/"):
+                url = url._replace(scheme="https", netloc="rukminim2.flixcart.com")
+            elif url.hostname.endswith(".flixcart.com"):
+                url = url._replace(scheme="https")
+            normalized = urlunsplit(url)
+            if normalized not in images:
+                images.append(normalized)
+        except (ValueError, TypeError):
+            continue
+    return images[:3]
 
 
 def product_result(row: dict, *, details: bool = False) -> dict:
@@ -44,7 +72,7 @@ def product_result(row: dict, *, details: bool = False) -> dict:
         if row.get("available") is not None
         else "unknown",
         "rating": rating,
-        "images": parse_list(row.get("image") or "")[:3],
+        "images": product_images(row.get("image") or ""),
     }
     if details:
         result["specifications"] = parse_specifications(
