@@ -9,6 +9,8 @@ uv run python -m src.api
 
 Open http://localhost:8080. Create an account and confirm your email if Supabase requires it, then sign in. The storefront supports catalog search and continuous scrolling, product details, comparison, saved baskets, budgets and scoped exceptions, delivery details, preferences, and explicit demo checkout.
 
+Authentication currently uses email and password. Google sign-in is temporarily unavailable while the linked mail-account issue is resolved.
+
 The page obtains only the Supabase project URL and public publishable key from `/api/config`. Access and refresh tokens stay in sessionStorage; logging out clears local shopper drafts. All catalog and commerce calls require authenticated access. Prices and availability come from the backend.
 
 Checkout displays the engine read-back before enabling confirmation. Canceling discards that review; confirmation is a separate user click. Orders use historical catalog prices and demo inventory. There are no payments or shipments. Start `uv run python src/agent.py dev` in another terminal, then select **Talk to Kaufmann** and allow microphone access. See `docs/voice.md` for details.

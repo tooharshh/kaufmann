@@ -255,10 +255,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .auth-dialog form input:focus { border-color: #6e8977; outline: 1px solid #6e8977; outline-offset: 1px; }
 .auth-dialog .form-message:empty { display: none; }
 .auth-dialog .form-message { margin: 0; color: #8e463d; font-size: 11px; line-height: 1.5; }
-.google-auth-button { display: flex; min-height: 44px; align-items: center; justify-content: center; gap: 11px; border: 1px solid #747775; border-radius: 3px; background: #fff; color: #1f1f1f; font-size: 12px; font-weight: 500; transition: background .18s; }
-.google-auth-button:hover { background: #f7f8f8; }
-.google-auth-button svg { width: 18px; height: 18px; flex: 0 0 auto; }
-.google-auth-button:disabled { cursor: progress; opacity: .65; }
 .auth-toggle { display: block; margin: 16px auto 0; color: #647065; font-size: 11px; text-decoration: underline; text-underline-offset: 3px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 body:has(#auth-dialog[open]) > :not(#auth-dialog) { visibility: hidden; }
