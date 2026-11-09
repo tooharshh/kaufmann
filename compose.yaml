@@ -1,8 +1,4 @@
 x-runtime: &runtime
-  image: kaufmann:${IMAGE_TAG:-production}
-  build:
-    context: .
-    target: runtime
   env_file: .env
   init: true
   restart: unless-stopped
@@ -13,6 +9,11 @@ x-runtime: &runtime
 services:
   api:
     <<: *runtime
+    image: kaufmann:${IMAGE_TAG:-production}
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+      target: runtime
     ports:
       - "127.0.0.1:${PORT:-8080}:${PORT:-8080}"
     healthcheck:
@@ -23,6 +24,11 @@ services:
       retries: 3
   voice:
     <<: *runtime
+    image: kaufmann-worker:${IMAGE_TAG:-production}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
     command: [python, -m, src.agent, start]
     healthcheck:
       test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8081/',timeout=3)"]

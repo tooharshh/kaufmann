@@ -41,3 +41,19 @@ supabase/.temp/
 *~
 compose.override.yaml
 compose.override.yml
+
+# Private recordings, generated reports and machine-specific release notes.
+data/recordings/
+data/private/
+reports/
+artifacts/
+docs/local/
+*.wav
+*.mp3
+*.webm
+*.dump
+*.sql.gz
+playwright-report/
+test-results/
+web/.vite/
+*.tsbuildinfo

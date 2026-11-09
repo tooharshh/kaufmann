@@ -1,0 +1,1742 @@
+{
+  "summary": {
+    "cases": 80,
+    "statuses": {
+      "completed": 67,
+      "error": 13
+    },
+    "intent_accuracy": 0.7014925373134329,
+    "attempted_case_accuracy": 0.5875,
+    "by_language": {
+      "en": {
+        "attempted": 20,
+        "completed": 16,
+        "passed": 14
+      },
+      "mixed": {
+        "attempted": 20,
+        "completed": 16,
+        "passed": 13
+      },
+      "te": {
+        "attempted": 20,
+        "completed": 17,
+        "passed": 11
+      },
+      "te-Latn": {
+        "attempted": 20,
+        "completed": 18,
+        "passed": 9
+      }
+    },
+    "forbidden_action_intents": 0,
+    "latency_ms": {
+      "response_ms": {
+        "p50": 466,
+        "p95": 695
+      },
+      "first_token_ms": {
+        "p50": 442,
+        "p95": 550
+      },
+      "first_tool_ms": {
+        "p50": 469,
+        "p95": 694
+      }
+    },
+    "task_completion": null,
+    "first_audio_ms": null,
+    "browser_playback_start_ms": null,
+    "basis": "model tool intent against simulated tool outputs; no commerce or speech effects executed"
+  },
+  "results": [
+    {
+      "id": "gift_budget-en",
+      "language": "en",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "update_shopping_task",
+          "arguments": {
+            "recipient": "friend",
+            "budget_paise": 50000
+          }
+        },
+        {
+          "name": "search_products",
+          "arguments": {
+            "max_price_paise": 50000
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 922,
+      "first_token_ms": null,
+      "first_tool_ms": 509,
+      "human_review": "not_required"
+    },
+    {
+      "id": "gift_budget-te",
+      "language": "te",
+      "status": "error",
+      "error_type": "APIStatusError"
+    },
+    {
+      "id": "gift_budget-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "calls": [],
+      "text": "మీ స్నేహితుడికి ఎంత బడ్జెట్‌లో గిఫ్ట్‌లు కావాలి?",
+      "score": {
+        "passed": false,
+        "expected_tool_matched": false,
+        "forbidden_calls": []
+      },
+      "response_ms": 444,
+      "first_token_ms": 432,
+      "first_tool_ms": null,
+      "human_review": "pending"
+    },
+    {
+      "id": "gift_budget-mixed",
+      "language": "mixed",
+      "status": "error",
+      "error_type": "APIStatusError"
+    },
+    {
+      "id": "price_range-en",
+      "language": "en",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "shirt",
+            "min_price_paise": 30000,
+            "max_price_paise": 70000
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 974,
+      "first_token_ms": null,
+      "first_tool_ms": 974,
+      "human_review": "not_required"
+    },
+    {
+      "id": "price_range-te",
+      "language": "te",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "shirt",
+            "category": "",
+            "max_price_paise": 70000,
+            "min_price_paise": 30000,
+            "sort_by": "relevance",
+            "filters": null,
+            "min_rating": null,
+            "availability": "discoverable",
+            "offset": 0
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 414,
+      "first_token_ms": null,
+      "first_tool_ms": 414,
+      "human_review": "pending"
+    },
+    {
+      "id": "price_range-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "calls": [],
+      "text": "Could you clarify which colors you’d like to see on the shirts?",
+      "score": {
+        "passed": false,
+        "expected_tool_matched": false,
+        "forbidden_calls": []
+      },
+      "response_ms": 445,
+      "first_token_ms": 435,
+      "first_tool_ms": null,
+      "human_review": "pending"
+    },
+    {
+      "id": "price_range-mixed",
+      "language": "mixed",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "",
+            "category": "",
+            "max_price_paise": 70000,
+            "min_price_paise": 30000,
+            "sort_by": "price_asc",
+            "filters": null,
+            "min_rating": null,
+            "availability": "discoverable",
+            "offset": 0
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 432,
+      "first_token_ms": null,
+      "first_tool_ms": 432,
+      "human_review": "pending"
+    },
+    {
+      "id": "negation-en",
+      "language": "en",
+      "status": "error",
+      "error_type": "APIStatusError"
+    },
+    {
+      "id": "negation-te",
+      "language": "te",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "",
+            "category": "",
+            "max_price_paise": 50000,
+            "min_price_paise": null,
+            "sort_by": "price_asc",
+            "filters": {
+              "exclude_category": "jewelry"
+            },
+            "min_rating": null,
+            "availability": "discoverable",
+            "offset": 0
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": false,
+        "expected_tool_matched": false,
+        "forbidden_calls": []
+      },
+      "response_ms": 469,
+      "first_token_ms": null,
+      "first_tool_ms": 469,
+      "human_review": "pending"
+    },
+    {
+      "id": "negation-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "calls": [],
+      "text": "Friend ki gift kavali, kani budget ela undi?",
+      "score": {
+        "passed": false,
+        "expected_tool_matched": false,
+        "forbidden_calls": []
+      },
+      "response_ms": 544,
+      "first_token_ms": 543,
+      "first_tool_ms": null,
+      "human_review": "pending"
+    },
+    {
+      "id": "negation-mixed",
+      "language": "mixed",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "",
+            "category": "",
+            "max_price_paise": 50000,
+            "min_price_paise": null,
+            "sort_by": "relevance",
+            "filters": {
+              "exclude_category": "jewellery"
+            },
+            "min_rating": null,
+            "availability": "discoverable",
+            "offset": 0
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": false,
+        "expected_tool_matched": false,
+        "forbidden_calls": []
+      },
+      "response_ms": 437,
+      "first_token_ms": null,
+      "first_tool_ms": 436,
+      "human_review": "pending"
+    },
+    {
+      "id": "color_correction-en",
+      "language": "en",
+      "status": "error",
+      "error_type": "APIStatusError"
+    },
+    {
+      "id": "color_correction-te",
+      "language": "te",
+      "status": "error",
+      "error_type": "APIStatusError"
+    },
+    {
+      "id": "color_correction-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "red shirt",
+            "category": "",
+            "max_price_paise": null,
+            "min_price_paise": null,
+            "sort_by": "relevance",
+            "filters": null,
+            "min_rating": null,
+            "availability": "discoverable",
+            "offset": 0
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": false,
+        "expected_tool_matched": false,
+        "forbidden_calls": []
+      },
+      "response_ms": 583,
+      "first_token_ms": null,
+      "first_tool_ms": 583,
+      "human_review": "pending"
+    },
+    {
+      "id": "color_correction-mixed",
+      "language": "mixed",
+      "status": "error",
+      "error_type": "APIStatusError"
+    },
+    {
+      "id": "combined_filters-en",
+      "language": "en",
+      "status": "error",
+      "error_type": "APIStatusError"
+    },
+    {
+      "id": "combined_filters-te",
+      "language": "te",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "blue cotton shirt",
+            "max_price_paise": 50000,
+            "filters": {
+              "Color": "Blue"
+            }
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": false,
+        "expected_tool_matched": false,
+        "forbidden_calls": []
+      },
+      "response_ms": 523,
+      "first_token_ms": null,
+      "first_tool_ms": 523,
+      "human_review": "pending"
+    },
+    {
+      "id": "combined_filters-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "blue cotton shirt",
+            "category": "",
+            "max_price_paise": null,
+            "min_price_paise": null,
+            "sort_by": "relevance",
+            "filters": null,
+            "min_rating": null,
+            "availability": "discoverable",
+            "offset": 0
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": false,
+        "expected_tool_matched": false,
+        "forbidden_calls": []
+      },
+      "response_ms": 470,
+      "first_token_ms": null,
+      "first_tool_ms": 469,
+      "human_review": "pending"
+    },
+    {
+      "id": "combined_filters-mixed",
+      "language": "mixed",
+      "status": "error",
+      "error_type": "APIStatusError"
+    },
+    {
+      "id": "more-en",
+      "language": "en",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "show_more_products",
+          "arguments": {}
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 512,
+      "first_token_ms": null,
+      "first_tool_ms": 512,
+      "human_review": "not_required"
+    },
+    {
+      "id": "more-te",
+      "language": "te",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "show_more_products",
+          "arguments": {}
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 452,
+      "first_token_ms": null,
+      "first_tool_ms": 452,
+      "human_review": "pending"
+    },
+    {
+      "id": "more-te-Latn",
+      "language": "te-Latn",
+      "status": "error",
+      "error_type": "APIStatusError"
+    },
+    {
+      "id": "more-mixed",
+      "language": "mixed",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "show_more_products",
+          "arguments": {}
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 498,
+      "first_token_ms": null,
+      "first_tool_ms": 498,
+      "human_review": "pending"
+    },
+    {
+      "id": "different-en",
+      "language": "en",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "different_products",
+          "arguments": {}
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 534,
+      "first_token_ms": null,
+      "first_tool_ms": 534,
+      "human_review": "not_required"
+    },
+    {
+      "id": "different-te",
+      "language": "te",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "different_products",
+          "arguments": {}
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 483,
+      "first_token_ms": null,
+      "first_tool_ms": 483,
+      "human_review": "pending"
+    },
+    {
+      "id": "different-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "different_products",
+          "arguments": {}
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 478,
+      "first_token_ms": null,
+      "first_tool_ms": 478,
+      "human_review": "pending"
+    },
+    {
+      "id": "different-mixed",
+      "language": "mixed",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "different_products",
+          "arguments": {}
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 410,
+      "first_token_ms": null,
+      "first_tool_ms": 409,
+      "human_review": "pending"
+    },
+    {
+      "id": "comparison-en",
+      "language": "en",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "compare_products",
+          "arguments": {
+            "product_ids": [
+              "fixture-blue",
+              "fixture-green"
+            ]
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 670,
+      "first_token_ms": null,
+      "first_tool_ms": 670,
+      "human_review": "not_required"
+    },
+    {
+      "id": "comparison-te",
+      "language": "te",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "compare_products",
+          "arguments": {
+            "product_ids": [
+              "fixture-blue",
+              "fixture-green"
+            ]
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 571,
+      "first_token_ms": null,
+      "first_tool_ms": 571,
+      "human_review": "pending"
+    },
+    {
+      "id": "comparison-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "compare_products",
+          "arguments": {
+            "product_ids": [
+              "fixture-blue",
+              "fixture-green"
+            ]
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 517,
+      "first_token_ms": null,
+      "first_tool_ms": 516,
+      "human_review": "pending"
+    },
+    {
+      "id": "comparison-mixed",
+      "language": "mixed",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "compare_products",
+          "arguments": {
+            "product_ids": [
+              "fixture-blue",
+              "fixture-green"
+            ]
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 502,
+      "first_token_ms": null,
+      "first_tool_ms": 502,
+      "human_review": "pending"
+    },
+    {
+      "id": "ordinal-en",
+      "language": "en",
+      "status": "error",
+      "error_type": "APIStatusError"
+    },
+    {
+      "id": "ordinal-te",
+      "language": "te",
+      "status": "error",
+      "error_type": "APIStatusError"
+    },
+    {
+      "id": "ordinal-te-Latn",
+      "language": "te-Latn",
+      "status": "error",
+      "error_type": "APIStatusError"
+    },
+    {
+      "id": "ordinal-mixed",
+      "language": "mixed",
+      "status": "error",
+      "error_type": "APIStatusError"
+    },
+    {
+      "id": "add_more-en",
+      "language": "en",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "add_item",
+          "arguments": {
+            "product_id": "fixture-blue",
+            "quantity": 2
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 452,
+      "first_token_ms": null,
+      "first_tool_ms": 452,
+      "human_review": "not_required"
+    },
+    {
+      "id": "add_more-te",
+      "language": "te",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "add_item",
+          "arguments": {
+            "product_id": "fixture-blue",
+            "quantity": 2
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 471,
+      "first_token_ms": null,
+      "first_tool_ms": 471,
+      "human_review": "pending"
+    },
+    {
+      "id": "add_more-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "add_item",
+          "arguments": {
+            "product_id": "fixture-blue",
+            "quantity": 2
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 520,
+      "first_token_ms": null,
+      "first_tool_ms": 520,
+      "human_review": "pending"
+    },
+    {
+      "id": "add_more-mixed",
+      "language": "mixed",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "add_item",
+          "arguments": {
+            "product_id": "fixture-blue",
+            "quantity": 2
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 460,
+      "first_token_ms": null,
+      "first_tool_ms": 460,
+      "human_review": "pending"
+    },
+    {
+      "id": "set_quantity-en",
+      "language": "en",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "set_quantity",
+          "arguments": {
+            "product_id": "fixture-blue",
+            "quantity": 2
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 406,
+      "first_token_ms": null,
+      "first_tool_ms": 406,
+      "human_review": "not_required"
+    },
+    {
+      "id": "set_quantity-te",
+      "language": "te",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "set_quantity",
+          "arguments": {
+            "product_id": "fixture-blue",
+            "quantity": 2
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 446,
+      "first_token_ms": null,
+      "first_tool_ms": 446,
+      "human_review": "pending"
+    },
+    {
+      "id": "set_quantity-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "set_quantity",
+          "arguments": {
+            "product_id": "fixture-blue",
+            "quantity": 2
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 437,
+      "first_token_ms": null,
+      "first_tool_ms": 437,
+      "human_review": "pending"
+    },
+    {
+      "id": "set_quantity-mixed",
+      "language": "mixed",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "set_quantity",
+          "arguments": {
+            "product_id": "fixture-blue",
+            "quantity": 2
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 491,
+      "first_token_ms": null,
+      "first_tool_ms": 490,
+      "human_review": "pending"
+    },
+    {
+      "id": "budget_change-en",
+      "language": "en",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "set_budget",
+          "arguments": {
+            "budget_paise": 80000
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 456,
+      "first_token_ms": null,
+      "first_tool_ms": 456,
+      "human_review": "not_required"
+    },
+    {
+      "id": "budget_change-te",
+      "language": "te",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "set_budget",
+          "arguments": {
+            "budget_paise": 80000000
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": false,
+        "expected_tool_matched": false,
+        "forbidden_calls": []
+      },
+      "response_ms": 550,
+      "first_token_ms": null,
+      "first_tool_ms": 549,
+      "human_review": "pending"
+    },
+    {
+      "id": "budget_change-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "calls": [],
+      "text": "Your cart total is one hundred rupees. Would you like to remove any items?",
+      "score": {
+        "passed": false,
+        "expected_tool_matched": false,
+        "forbidden_calls": []
+      },
+      "response_ms": 455,
+      "first_token_ms": 442,
+      "first_tool_ms": null,
+      "human_review": "pending"
+    },
+    {
+      "id": "budget_change-mixed",
+      "language": "mixed",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "set_budget",
+          "arguments": {
+            "budget_paise": 80000
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 557,
+      "first_token_ms": null,
+      "first_tool_ms": 557,
+      "human_review": "pending"
+    },
+    {
+      "id": "wait-en",
+      "language": "en",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "cancel_order_review",
+          "arguments": {}
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 499,
+      "first_token_ms": null,
+      "first_tool_ms": 498,
+      "human_review": "not_required"
+    },
+    {
+      "id": "wait-te",
+      "language": "te",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "cancel_order_review",
+          "arguments": {}
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 421,
+      "first_token_ms": null,
+      "first_tool_ms": 421,
+      "human_review": "pending"
+    },
+    {
+      "id": "wait-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "cancel_order_review",
+          "arguments": {}
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 424,
+      "first_token_ms": null,
+      "first_tool_ms": 423,
+      "human_review": "pending"
+    },
+    {
+      "id": "wait-mixed",
+      "language": "mixed",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "cancel_order_review",
+          "arguments": {}
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 464,
+      "first_token_ms": null,
+      "first_tool_ms": 463,
+      "human_review": "pending"
+    },
+    {
+      "id": "address_correction-en",
+      "language": "en",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "propose_delivery_address",
+          "arguments": {
+            "patch": {
+              "city": "Vijayawada"
+            }
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 464,
+      "first_token_ms": null,
+      "first_tool_ms": 464,
+      "human_review": "not_required"
+    },
+    {
+      "id": "address_correction-te",
+      "language": "te",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "propose_delivery_address",
+          "arguments": {
+            "patch": {
+              "city": "Vijayawada"
+            }
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 695,
+      "first_token_ms": null,
+      "first_tool_ms": 694,
+      "human_review": "pending"
+    },
+    {
+      "id": "address_correction-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "propose_delivery_address",
+          "arguments": {
+            "patch": {
+              "city": "Vijayawada"
+            }
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 412,
+      "first_token_ms": null,
+      "first_tool_ms": 412,
+      "human_review": "pending"
+    },
+    {
+      "id": "address_correction-mixed",
+      "language": "mixed",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "propose_delivery_address",
+          "arguments": {
+            "patch": {
+              "city": "Vijayawada"
+            }
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 440,
+      "first_token_ms": null,
+      "first_tool_ms": 440,
+      "human_review": "pending"
+    },
+    {
+      "id": "approve_address-en",
+      "language": "en",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "approve_delivery_address",
+          "arguments": {}
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 383,
+      "first_token_ms": null,
+      "first_tool_ms": 383,
+      "human_review": "not_required"
+    },
+    {
+      "id": "approve_address-te",
+      "language": "te",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "approve_delivery_address",
+          "arguments": {}
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 1071,
+      "first_token_ms": null,
+      "first_tool_ms": 1071,
+      "human_review": "pending"
+    },
+    {
+      "id": "approve_address-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "approve_delivery_address",
+          "arguments": {}
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 417,
+      "first_token_ms": null,
+      "first_tool_ms": 417,
+      "human_review": "pending"
+    },
+    {
+      "id": "approve_address-mixed",
+      "language": "mixed",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "approve_delivery_address",
+          "arguments": {}
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 406,
+      "first_token_ms": null,
+      "first_tool_ms": 406,
+      "human_review": "pending"
+    },
+    {
+      "id": "cancel_address-en",
+      "language": "en",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "cancel_delivery_address",
+          "arguments": {}
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 426,
+      "first_token_ms": null,
+      "first_tool_ms": 425,
+      "human_review": "not_required"
+    },
+    {
+      "id": "cancel_address-te",
+      "language": "te",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "cancel_delivery_address",
+          "arguments": {}
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 475,
+      "first_token_ms": null,
+      "first_tool_ms": 474,
+      "human_review": "pending"
+    },
+    {
+      "id": "cancel_address-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "cancel_delivery_address",
+          "arguments": {}
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 458,
+      "first_token_ms": null,
+      "first_tool_ms": 458,
+      "human_review": "pending"
+    },
+    {
+      "id": "cancel_address-mixed",
+      "language": "mixed",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "cancel_delivery_address",
+          "arguments": {}
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 543,
+      "first_token_ms": null,
+      "first_tool_ms": 542,
+      "human_review": "pending"
+    },
+    {
+      "id": "remember_size-en",
+      "language": "en",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "manage_memory",
+          "arguments": {
+            "operation": "add",
+            "subject": "self",
+            "scope": "general",
+            "key": "size",
+            "value": "medium"
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": false,
+        "expected_tool_matched": false,
+        "forbidden_calls": []
+      },
+      "response_ms": 451,
+      "first_token_ms": null,
+      "first_tool_ms": 451,
+      "human_review": "not_required"
+    },
+    {
+      "id": "remember_size-te",
+      "language": "te",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "manage_memory",
+          "arguments": {
+            "operation": "add",
+            "subject": "self",
+            "scope": "general",
+            "key": "size",
+            "value": "medium"
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": false,
+        "expected_tool_matched": false,
+        "forbidden_calls": []
+      },
+      "response_ms": 477,
+      "first_token_ms": null,
+      "first_tool_ms": 477,
+      "human_review": "pending"
+    },
+    {
+      "id": "remember_size-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "calls": [],
+      "text": "మీరు ఏ రంగు షర్ట్‌ను మధ్య (Medium) సైజులో జోడించాలని కోరుకుంటున్నారు?",
+      "score": {
+        "passed": false,
+        "expected_tool_matched": false,
+        "forbidden_calls": []
+      },
+      "response_ms": 473,
+      "first_token_ms": 453,
+      "first_tool_ms": null,
+      "human_review": "pending"
+    },
+    {
+      "id": "remember_size-mixed",
+      "language": "mixed",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "manage_memory",
+          "arguments": {
+            "operation": "add",
+            "subject": "self",
+            "scope": "general",
+            "key": "size",
+            "value": "medium"
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": false,
+        "expected_tool_matched": false,
+        "forbidden_calls": []
+      },
+      "response_ms": 482,
+      "first_token_ms": null,
+      "first_tool_ms": 482,
+      "human_review": "pending"
+    },
+    {
+      "id": "forget_size-en",
+      "language": "en",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "manage_memory",
+          "arguments": {
+            "operation": "forget",
+            "subject": "self",
+            "scope": "general",
+            "key": "size",
+            "value": ""
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 436,
+      "first_token_ms": null,
+      "first_tool_ms": 436,
+      "human_review": "not_required"
+    },
+    {
+      "id": "forget_size-te",
+      "language": "te",
+      "status": "completed",
+      "calls": [],
+      "text": "మీరు ఏ సైజు బట్టలు కోరుకుంటున్నారు?",
+      "score": {
+        "passed": false,
+        "expected_tool_matched": false,
+        "forbidden_calls": []
+      },
+      "response_ms": 459,
+      "first_token_ms": 445,
+      "first_tool_ms": null,
+      "human_review": "pending"
+    },
+    {
+      "id": "forget_size-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "calls": [],
+      "text": "మీరు ఏ పరిమాణం కోరుకుంటున్నారు?",
+      "score": {
+        "passed": false,
+        "expected_tool_matched": false,
+        "forbidden_calls": []
+      },
+      "response_ms": 559,
+      "first_token_ms": 550,
+      "first_tool_ms": null,
+      "human_review": "pending"
+    },
+    {
+      "id": "forget_size-mixed",
+      "language": "mixed",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "manage_memory",
+          "arguments": {
+            "operation": "forget",
+            "subject": "self",
+            "scope": "general",
+            "key": "size",
+            "value": ""
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 466,
+      "first_token_ms": null,
+      "first_tool_ms": 466,
+      "human_review": "pending"
+    },
+    {
+      "id": "inspect_memory-en",
+      "language": "en",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "inspect_memory",
+          "arguments": {}
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 549,
+      "first_token_ms": null,
+      "first_tool_ms": 549,
+      "human_review": "not_required"
+    },
+    {
+      "id": "inspect_memory-te",
+      "language": "te",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "inspect_memory",
+          "arguments": {}
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 491,
+      "first_token_ms": null,
+      "first_tool_ms": 491,
+      "human_review": "pending"
+    },
+    {
+      "id": "inspect_memory-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "inspect_memory",
+          "arguments": {}
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 418,
+      "first_token_ms": null,
+      "first_tool_ms": 418,
+      "human_review": "pending"
+    },
+    {
+      "id": "inspect_memory-mixed",
+      "language": "mixed",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "inspect_memory",
+          "arguments": {}
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 436,
+      "first_token_ms": null,
+      "first_tool_ms": 436,
+      "human_review": "pending"
+    },
+    {
+      "id": "recipient_memory-en",
+      "language": "en",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "manage_memory",
+          "arguments": {
+            "operation": "add",
+            "subject": "recipient:brother",
+            "scope": "general",
+            "key": "size",
+            "value": "large"
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": false,
+        "expected_tool_matched": false,
+        "forbidden_calls": []
+      },
+      "response_ms": 420,
+      "first_token_ms": null,
+      "first_tool_ms": 420,
+      "human_review": "not_required"
+    },
+    {
+      "id": "recipient_memory-te",
+      "language": "te",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "manage_memory",
+          "arguments": {
+            "operation": "add",
+            "subject": "recipient:Brother",
+            "scope": "general",
+            "key": "size",
+            "value": "large"
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": false,
+        "expected_tool_matched": false,
+        "forbidden_calls": []
+      },
+      "response_ms": 558,
+      "first_token_ms": null,
+      "first_tool_ms": 558,
+      "human_review": "pending"
+    },
+    {
+      "id": "recipient_memory-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "calls": [],
+      "text": "నేను షాపింగ్‌కు సంబంధించిన విషయాల్లో మాత్రమే సహాయం చేయగలను. మీకు ఏ వస్తువు కావాలి?",
+      "score": {
+        "passed": false,
+        "expected_tool_matched": false,
+        "forbidden_calls": []
+      },
+      "response_ms": 434,
+      "first_token_ms": 419,
+      "first_tool_ms": null,
+      "human_review": "pending"
+    },
+    {
+      "id": "recipient_memory-mixed",
+      "language": "mixed",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "manage_memory",
+          "arguments": {
+            "operation": "add",
+            "subject": "recipient:Brother",
+            "scope": "general",
+            "key": "size",
+            "value": "large"
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": false,
+        "expected_tool_matched": false,
+        "forbidden_calls": []
+      },
+      "response_ms": 454,
+      "first_token_ms": null,
+      "first_tool_ms": 454,
+      "human_review": "pending"
+    }
+  ],
+  "collection_summary": {
+    "cases": 80,
+    "statuses": {
+      "completed": 67,
+      "error": 13
+    },
+    "intent_accuracy": 0.7014925373134329,
+    "forbidden_action_intents": 0,
+    "latency_ms": {
+      "response_ms": {
+        "p50": 466,
+        "p95": 695
+      },
+      "first_token_ms": {
+        "p50": 442,
+        "p95": 550
+      },
+      "first_tool_ms": {
+        "p50": 469,
+        "p95": 694
+      }
+    },
+    "task_completion": null,
+    "first_audio_ms": null,
+    "browser_playback_start_ms": null,
+    "basis": "model tool intent against simulated tool outputs; no commerce or speech effects executed"
+  },
+  "metadata": {
+    "model": "gpt-oss-120b",
+    "scenario_sha256": "aff1b9b4185b7f6d8aedc4031058c543aabc360736270ccb772542afa9f4e192",
+    "prompt_sha256": {
+      "discover": "f207a431c0a6361138df1f7088dbc4bfe884a935e00db65ef80c31fd28c2bd9b",
+      "basket": "37124117f2caafb8b1a026b4ec1fbeacbea26c4221349c464e4a5c9047f1ac94",
+      "checkout": "4d141a4f88bf3b8587a805014cd7197576d8135ae42637d8a0894d2f094c3f13"
+    },
+    "live": true,
+    "delay_seconds": 12,
+    "max_steps_per_case": 6,
+    "collection_date": "2026-11-08",
+    "notes": [
+      "Baseline collected before the memory operation enum fix. Tool schema hashes were not recorded at collection time.",
+      "Prompt hashes added after collection; prompt text did not change during the run.",
+      "Rate-limit messages were observed. Per-case HTTP error statuses were not retained.",
+      "Scores are deterministic selected tool/argument checks, with Telugu human review pending."
+    ]
+  }
+}

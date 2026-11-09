@@ -1,0 +1,224 @@
+{
+  "metadata": {
+    "model": "gpt-oss-120b",
+    "scenario_sha256": "aff1b9b4185b7f6d8aedc4031058c543aabc360736270ccb772542afa9f4e192",
+    "prompt_sha256": {
+      "discover": "afb3ecacb695c281a0ca0a6a28d6449b6272a368d72df63641fb44d94b6980e6",
+      "basket": "988ef9886bc10cdbf55dce7591280e846659862ab5a35cd68758111687f70490",
+      "checkout": "033170124ca969e3601b2894eaf637e5aa25911d31ebf5693eb293b6a744e16c"
+    },
+    "started_at_utc": "2026-11-09T12:33:12.466041+00:00",
+    "delay_seconds": 20.0,
+    "max_steps_per_case": 6,
+    "live": true
+  },
+  "summary": {
+    "cases": 4,
+    "statuses": {
+      "completed": 4
+    },
+    "intent_accuracy": 1.0,
+    "attempted_case_accuracy": 1.0,
+    "by_language": {
+      "en": {
+        "attempted": 1,
+        "completed": 1,
+        "passed": 1
+      },
+      "mixed": {
+        "attempted": 1,
+        "completed": 1,
+        "passed": 1
+      },
+      "te": {
+        "attempted": 1,
+        "completed": 1,
+        "passed": 1
+      },
+      "te-Latn": {
+        "attempted": 1,
+        "completed": 1,
+        "passed": 1
+      }
+    },
+    "forbidden_action_intents": 0,
+    "latency_ms": {
+      "response_ms": {
+        "p50": 617,
+        "p95": 1240
+      },
+      "first_token_ms": {
+        "p50": null,
+        "p95": null
+      },
+      "first_tool_ms": {
+        "p50": 616,
+        "p95": 694
+      }
+    },
+    "task_completion": null,
+    "first_audio_ms": null,
+    "browser_playback_start_ms": null,
+    "basis": "model tool intent against simulated tool outputs; no commerce or speech effects executed"
+  },
+  "results": [
+    {
+      "id": "recipient_memory-en",
+      "language": "en",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "manage_memory",
+          "arguments": {
+            "operation": "remember",
+            "subject": "brother",
+            "scope": "clothing",
+            "key": "size",
+            "value": "large"
+          },
+          "canonical_arguments": {
+            "operation": "remember",
+            "subject": "brother",
+            "scope": "clothing",
+            "key": "size",
+            "value": "large"
+          },
+          "validation_status": "invalid_memory"
+        },
+        {
+          "name": "manage_memory",
+          "arguments": {
+            "operation": "remember",
+            "subject": "recipient:brother",
+            "scope": "clothing",
+            "key": "size",
+            "value": "large"
+          },
+          "canonical_arguments": {
+            "operation": "remember",
+            "subject": "recipient:brother",
+            "scope": "clothing",
+            "key": "size",
+            "value": "large"
+          },
+          "validation_status": "ok"
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 1240,
+      "first_token_ms": null,
+      "first_tool_ms": 694,
+      "human_review": "not_required"
+    },
+    {
+      "id": "recipient_memory-te",
+      "language": "te",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "manage_memory",
+          "arguments": {
+            "operation": "remember",
+            "subject": "recipient:brother",
+            "scope": "clothing",
+            "key": "size",
+            "value": "large"
+          },
+          "canonical_arguments": {
+            "operation": "remember",
+            "subject": "recipient:brother",
+            "scope": "clothing",
+            "key": "size",
+            "value": "large"
+          },
+          "validation_status": "ok"
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 617,
+      "first_token_ms": null,
+      "first_tool_ms": 616,
+      "human_review": "pending"
+    },
+    {
+      "id": "recipient_memory-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "manage_memory",
+          "arguments": {
+            "operation": "remember",
+            "subject": "recipient:annayya",
+            "scope": "size",
+            "key": "size",
+            "value": "large"
+          },
+          "canonical_arguments": {
+            "operation": "remember",
+            "subject": "recipient:brother",
+            "scope": "size",
+            "key": "size",
+            "value": "large"
+          },
+          "validation_status": "ok"
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 687,
+      "first_token_ms": null,
+      "first_tool_ms": 687,
+      "human_review": "pending"
+    },
+    {
+      "id": "recipient_memory-mixed",
+      "language": "mixed",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "manage_memory",
+          "arguments": {
+            "operation": "remember",
+            "subject": "recipient:Brother",
+            "scope": "clothing",
+            "key": "size",
+            "value": "large"
+          },
+          "canonical_arguments": {
+            "operation": "remember",
+            "subject": "recipient:brother",
+            "scope": "clothing",
+            "key": "size",
+            "value": "large"
+          },
+          "validation_status": "ok"
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 582,
+      "first_token_ms": null,
+      "first_tool_ms": 582,
+      "human_review": "pending"
+    }
+  ]
+}

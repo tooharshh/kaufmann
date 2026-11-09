@@ -1,0 +1,163 @@
+{
+  "metadata": {
+    "model": "gpt-oss-120b",
+    "scenario_sha256": "aff1b9b4185b7f6d8aedc4031058c543aabc360736270ccb772542afa9f4e192",
+    "prompt_sha256": {
+      "discover": "f207a431c0a6361138df1f7088dbc4bfe884a935e00db65ef80c31fd28c2bd9b",
+      "basket": "37124117f2caafb8b1a026b4ec1fbeacbea26c4221349c464e4a5c9047f1ac94",
+      "checkout": "4d141a4f88bf3b8587a805014cd7197576d8135ae42637d8a0894d2f094c3f13"
+    },
+    "started_at_utc": "2026-11-08T12:30:21.708796+00:00",
+    "delay_seconds": 20.0,
+    "max_steps_per_case": 6,
+    "live": true
+  },
+  "summary": {
+    "cases": 4,
+    "statuses": {
+      "completed": 4
+    },
+    "intent_accuracy": 0.75,
+    "attempted_case_accuracy": 0.75,
+    "by_language": {
+      "en": {
+        "attempted": 1,
+        "completed": 1,
+        "passed": 1
+      },
+      "mixed": {
+        "attempted": 1,
+        "completed": 1,
+        "passed": 1
+      },
+      "te": {
+        "attempted": 1,
+        "completed": 1,
+        "passed": 1
+      },
+      "te-Latn": {
+        "attempted": 1,
+        "completed": 1,
+        "passed": 0
+      }
+    },
+    "forbidden_action_intents": 0,
+    "latency_ms": {
+      "response_ms": {
+        "p50": 525,
+        "p95": 778
+      },
+      "first_token_ms": {
+        "p50": 457,
+        "p95": 457
+      },
+      "first_tool_ms": {
+        "p50": 574,
+        "p95": 778
+      }
+    },
+    "task_completion": null,
+    "first_audio_ms": null,
+    "browser_playback_start_ms": null,
+    "basis": "model tool intent against simulated tool outputs; no commerce or speech effects executed"
+  },
+  "results": [
+    {
+      "id": "remember_size-en",
+      "language": "en",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "manage_memory",
+          "arguments": {
+            "operation": "remember",
+            "subject": "self",
+            "scope": "general",
+            "key": "size",
+            "value": "medium"
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 778,
+      "first_token_ms": null,
+      "first_tool_ms": 778,
+      "human_review": "not_required"
+    },
+    {
+      "id": "remember_size-te",
+      "language": "te",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "manage_memory",
+          "arguments": {
+            "operation": "remember",
+            "subject": "self",
+            "scope": "general",
+            "key": "size",
+            "value": "medium"
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 574,
+      "first_token_ms": null,
+      "first_tool_ms": 574,
+      "human_review": "pending"
+    },
+    {
+      "id": "remember_size-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "calls": [],
+      "text": "మీరు మధ్య పరిమాణం (Medium) కోరుతున్నారని అర్థమైంది. ఏ రంగు లేదా శైలి కావాలి?",
+      "score": {
+        "passed": false,
+        "expected_tool_matched": false,
+        "forbidden_calls": []
+      },
+      "response_ms": 478,
+      "first_token_ms": 457,
+      "first_tool_ms": null,
+      "human_review": "pending"
+    },
+    {
+      "id": "remember_size-mixed",
+      "language": "mixed",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "manage_memory",
+          "arguments": {
+            "operation": "remember",
+            "subject": "self",
+            "scope": "general",
+            "key": "size",
+            "value": "medium"
+          }
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 525,
+      "first_token_ms": null,
+      "first_tool_ms": 525,
+      "human_review": "pending"
+    }
+  ]
+}

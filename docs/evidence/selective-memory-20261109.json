@@ -1,0 +1,365 @@
+{
+  "metadata": {
+    "model": "gpt-oss-120b",
+    "scenario_sha256": "75be12cc05ff58d41a6bf002093de56a00e682a89aba8d838678804f072b0374",
+    "extractor_sha256": "922d48315f728784cc253a612ae01acff57d652661b2715516fe44031f1a9425",
+    "language_aids_sha256": "7d85b61810af48792016eda9cc8e4349fbfa2acf7d1a0c9621e6188477e1e652",
+    "live": true,
+    "delay_seconds": 20.0
+  },
+  "summary": {
+    "cases": 20,
+    "completed": 20,
+    "provider_errors": 0,
+    "exact_case_matches": 20,
+    "memory_precision": 1.0,
+    "memory_recall": 1.0,
+    "basis": "real-provider extraction passed through the production retention gate; text only, bilingual review pending"
+  },
+  "results": [
+    {
+      "id": "usual_size-en",
+      "language": "en",
+      "status": "completed",
+      "human_review": "not_required",
+      "retained_facts": [
+        {
+          "subject": "self",
+          "scope": "clothing",
+          "key": "size",
+          "value": "medium"
+        }
+      ],
+      "score": {
+        "passed": true,
+        "correct": 1,
+        "retained": 1,
+        "expected": 1
+      }
+    },
+    {
+      "id": "usual_size-te",
+      "language": "te",
+      "status": "completed",
+      "human_review": "pending",
+      "retained_facts": [
+        {
+          "subject": "self",
+          "scope": "clothing",
+          "key": "size",
+          "value": "medium"
+        }
+      ],
+      "score": {
+        "passed": true,
+        "correct": 1,
+        "retained": 1,
+        "expected": 1
+      }
+    },
+    {
+      "id": "usual_size-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "human_review": "pending",
+      "retained_facts": [
+        {
+          "subject": "self",
+          "scope": "clothing",
+          "key": "size",
+          "value": "medium"
+        }
+      ],
+      "score": {
+        "passed": true,
+        "correct": 1,
+        "retained": 1,
+        "expected": 1
+      }
+    },
+    {
+      "id": "usual_size-mixed",
+      "language": "mixed",
+      "status": "completed",
+      "human_review": "pending",
+      "retained_facts": [
+        {
+          "subject": "self",
+          "scope": "clothing",
+          "key": "size",
+          "value": "medium"
+        }
+      ],
+      "score": {
+        "passed": true,
+        "correct": 1,
+        "retained": 1,
+        "expected": 1
+      }
+    },
+    {
+      "id": "recipient_size-en",
+      "language": "en",
+      "status": "completed",
+      "human_review": "not_required",
+      "retained_facts": [
+        {
+          "subject": "recipient:brother",
+          "scope": "clothing",
+          "key": "size",
+          "value": "large"
+        }
+      ],
+      "score": {
+        "passed": true,
+        "correct": 1,
+        "retained": 1,
+        "expected": 1
+      }
+    },
+    {
+      "id": "recipient_size-te",
+      "language": "te",
+      "status": "completed",
+      "human_review": "pending",
+      "retained_facts": [
+        {
+          "subject": "recipient:brother",
+          "scope": "clothing",
+          "key": "size",
+          "value": "large"
+        }
+      ],
+      "score": {
+        "passed": true,
+        "correct": 1,
+        "retained": 1,
+        "expected": 1
+      }
+    },
+    {
+      "id": "recipient_size-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "human_review": "pending",
+      "retained_facts": [
+        {
+          "subject": "recipient:brother",
+          "scope": "clothing",
+          "key": "size",
+          "value": "large"
+        }
+      ],
+      "score": {
+        "passed": true,
+        "correct": 1,
+        "retained": 1,
+        "expected": 1
+      }
+    },
+    {
+      "id": "recipient_size-mixed",
+      "language": "mixed",
+      "status": "completed",
+      "human_review": "pending",
+      "retained_facts": [
+        {
+          "subject": "recipient:brother",
+          "scope": "clothing",
+          "key": "size",
+          "value": "large"
+        }
+      ],
+      "score": {
+        "passed": true,
+        "correct": 1,
+        "retained": 1,
+        "expected": 1
+      }
+    },
+    {
+      "id": "corrected_size-en",
+      "language": "en",
+      "status": "completed",
+      "human_review": "not_required",
+      "retained_facts": [
+        {
+          "subject": "self",
+          "scope": "clothing",
+          "key": "size",
+          "value": "large"
+        }
+      ],
+      "score": {
+        "passed": true,
+        "correct": 1,
+        "retained": 1,
+        "expected": 1
+      }
+    },
+    {
+      "id": "corrected_size-te",
+      "language": "te",
+      "status": "completed",
+      "human_review": "pending",
+      "retained_facts": [
+        {
+          "subject": "self",
+          "scope": "clothing",
+          "key": "size",
+          "value": "large"
+        }
+      ],
+      "score": {
+        "passed": true,
+        "correct": 1,
+        "retained": 1,
+        "expected": 1
+      }
+    },
+    {
+      "id": "corrected_size-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "human_review": "pending",
+      "retained_facts": [
+        {
+          "subject": "self",
+          "scope": "clothing",
+          "key": "size",
+          "value": "large"
+        }
+      ],
+      "score": {
+        "passed": true,
+        "correct": 1,
+        "retained": 1,
+        "expected": 1
+      }
+    },
+    {
+      "id": "corrected_size-mixed",
+      "language": "mixed",
+      "status": "completed",
+      "human_review": "pending",
+      "retained_facts": [
+        {
+          "subject": "self",
+          "scope": "clothing",
+          "key": "size",
+          "value": "large"
+        }
+      ],
+      "score": {
+        "passed": true,
+        "correct": 1,
+        "retained": 1,
+        "expected": 1
+      }
+    },
+    {
+      "id": "temporary_budget-en",
+      "language": "en",
+      "status": "completed",
+      "human_review": "not_required",
+      "retained_facts": [],
+      "score": {
+        "passed": true,
+        "correct": 0,
+        "retained": 0,
+        "expected": 0
+      }
+    },
+    {
+      "id": "temporary_budget-te",
+      "language": "te",
+      "status": "completed",
+      "human_review": "pending",
+      "retained_facts": [],
+      "score": {
+        "passed": true,
+        "correct": 0,
+        "retained": 0,
+        "expected": 0
+      }
+    },
+    {
+      "id": "temporary_budget-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "human_review": "pending",
+      "retained_facts": [],
+      "score": {
+        "passed": true,
+        "correct": 0,
+        "retained": 0,
+        "expected": 0
+      }
+    },
+    {
+      "id": "temporary_budget-mixed",
+      "language": "mixed",
+      "status": "completed",
+      "human_review": "pending",
+      "retained_facts": [],
+      "score": {
+        "passed": true,
+        "correct": 0,
+        "retained": 0,
+        "expected": 0
+      }
+    },
+    {
+      "id": "one_purchase-en",
+      "language": "en",
+      "status": "completed",
+      "human_review": "not_required",
+      "retained_facts": [],
+      "score": {
+        "passed": true,
+        "correct": 0,
+        "retained": 0,
+        "expected": 0
+      }
+    },
+    {
+      "id": "one_purchase-te",
+      "language": "te",
+      "status": "completed",
+      "human_review": "pending",
+      "retained_facts": [],
+      "score": {
+        "passed": true,
+        "correct": 0,
+        "retained": 0,
+        "expected": 0
+      }
+    },
+    {
+      "id": "one_purchase-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "human_review": "pending",
+      "retained_facts": [],
+      "score": {
+        "passed": true,
+        "correct": 0,
+        "retained": 0,
+        "expected": 0
+      }
+    },
+    {
+      "id": "one_purchase-mixed",
+      "language": "mixed",
+      "status": "completed",
+      "human_review": "pending",
+      "retained_facts": [],
+      "score": {
+        "passed": true,
+        "correct": 0,
+        "retained": 0,
+        "expected": 0
+      }
+    }
+  ]
+}

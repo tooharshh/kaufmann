@@ -1,6 +1,6 @@
 # Production build
 
-The application uses separate containers for the HTTP storefront/API and LiveKit voice worker. Providers remain Cerebras GPT-OSS 120B and Sarvam. The frontend has no Node build step.
+The application uses separate images for the HTTP storefront/API and LiveKit voice worker. Providers remain Cerebras GPT-OSS 120B and Sarvam. `Dockerfile.api` builds the locked frontend dependencies with Node and serves the resulting assets through Python. The root `Dockerfile` builds the Python worker.
 
 ## Local container release check
 
@@ -40,7 +40,7 @@ Numeric voice metrics remain enabled on the server without transcript logging. B
 
 ## Free hosted demo: Render + LiveKit Cloud
 
-Create a Render Blueprint from this repository using `render.yaml`. It creates only a free web service in Singapore; automatic deployments are off. Set the prompted secrets in Render: `CEREBRAS_API_KEY`, `SARVAM_API_KEY`, `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `VOICE_DISPATCH_SECRET`, `DATABASE_URL`, `SUPABASE_URL`, and `SUPABASE_PUBLISHABLE_KEY`. With `APP_ORIGIN` unset, the app uses Render's external URL. Keep Supabase unchanged and configure its authentication site/redirect URLs for the resulting HTTPS domain.
+Create a Render Blueprint from this repository using `render.yaml`. It creates only a free web service in Singapore; automatic deployments are off. Set the prompted secrets in Render: `CEREBRAS_API_KEY`, `SARVAM_API_KEY`, `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `VOICE_DISPATCH_SECRET`, `DATABASE_URL`, `SUPABASE_URL`, and `SUPABASE_PUBLISHABLE_KEY`. With `APP_ORIGIN` unset, the app uses Render's external URL. Configure Supabase authentication site/redirect URLs for the resulting HTTPS domain. Apply reviewed migrations separately, as described below.
 
 Deploy the worker on LiveKit Cloud Build with the root `Dockerfile`; Render uses `Dockerfile.api`. Authenticate the official LiveKit CLI and select the existing project. Keep the generated `livekit.toml` project/agent IDs for subsequent deployments. Add `CEREBRAS_API_KEY`, `SARVAM_API_KEY`, `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and `VOICE_DISPATCH_SECRET` in LiveKit's encrypted secret settings. LiveKit injects its own `LIVEKIT_URL`, `LIVEKIT_API_KEY`, and `LIVEKIT_API_SECRET`; do not override those.
 
@@ -49,3 +49,17 @@ Both hosts now require an independent `VOICE_DISPATCH_SECRET`. Generate a crypto
 Render's free API sleeps after inactivity. LiveKit Build includes 1,000 agent session minutes per month and can cold-start in 10–20 seconds. The browser allows 90 seconds for an agent to join. Free allowances are capped; speech/provider credits remain separate. No keep-alive pings or paid upgrades are configured.
 
 Before live validation, stop the local worker to avoid competing dispatches. Check HTTPS, health/readiness, login, products, microphone, screen navigation and persisted cart/address changes. Keep order-confirmation tests on disposable fixtures. Roll back free deployments by redeploying the previous known-good revision.
+
+## Catalog and memory release
+
+`20261108114540_browser_evaluation.sql` adds catalog isolation, discovery state and preference memory. It replaces the old unique constraint on session user IDs. The previous application is incompatible with that change, so do not apply it while the old API or voice worker is serving shoppers.
+
+For the existing Render service and LiveKit agent:
+
+1. Disable automatic deploys on Render before publishing the release. Back up the database and note the current Render commit and LiveKit production version. Allow active calls to finish. Suspend the old Render service and prevent production voice dispatch while migrating.
+2. Apply `supabase/migrations/20261108114540_browser_evaluation.sql` once to the existing Supabase database through the migration workflow or SQL editor. If using the editor, execute the complete file inside `BEGIN;` and `COMMIT;` so a failure rolls back all changes. Do not rerun it if already applied. Preserve existing products, inventory, sessions and orders.
+3. In Render, select **Manual Deploy → Deploy a specific commit** and choose the release commit. Use `Dockerfile.api`. Verify the existing secret settings, then resume the service. Leave `LIVEKIT_AGENT_DEPLOYMENT` unset for production.
+4. Promote the prepared worker candidate from this repository with `lk agent promote --deployment release-candidate`. If no candidate was uploaded, use `lk agent deploy` instead. These commands use the configured `livekit.toml`; they must target the same project as Render.
+5. Check `https://kaufmann-web.onrender.com/health` and `/ready`, then `lk agent status`. Sign in and test discovery, remembered preferences across reconnects, address correction and a confirmed demo order. Health checks alone do not verify speech or language quality.
+
+Keep the old catalog and order snapshots. An application-only rollback is unsafe after this migration; restore a matching database backup while traffic is paused, or prepare a reviewed compatibility fix. Never drop live tables or delete orders to make an old build start.

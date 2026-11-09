@@ -1,0 +1,644 @@
+{
+  "metadata": {
+    "model": "gpt-oss-120b",
+    "scenario_sha256": "aff1b9b4185b7f6d8aedc4031058c543aabc360736270ccb772542afa9f4e192",
+    "prompt_sha256": {
+      "discover": "afb3ecacb695c281a0ca0a6a28d6449b6272a368d72df63641fb44d94b6980e6",
+      "basket": "988ef9886bc10cdbf55dce7591280e846659862ab5a35cd68758111687f70490",
+      "checkout": "033170124ca969e3601b2894eaf637e5aa25911d31ebf5693eb293b6a744e16c"
+    },
+    "started_at_utc": "2026-11-09T12:09:03.614369+00:00",
+    "delay_seconds": 20.0,
+    "max_steps_per_case": 6,
+    "live": true
+  },
+  "summary": {
+    "cases": 20,
+    "statuses": {
+      "completed": 20
+    },
+    "intent_accuracy": 0.9,
+    "attempted_case_accuracy": 0.9,
+    "by_language": {
+      "en": {
+        "attempted": 5,
+        "completed": 5,
+        "passed": 4
+      },
+      "mixed": {
+        "attempted": 5,
+        "completed": 5,
+        "passed": 5
+      },
+      "te": {
+        "attempted": 5,
+        "completed": 5,
+        "passed": 5
+      },
+      "te-Latn": {
+        "attempted": 5,
+        "completed": 5,
+        "passed": 4
+      }
+    },
+    "forbidden_action_intents": 0,
+    "latency_ms": {
+      "response_ms": {
+        "p50": 659,
+        "p95": 1337
+      },
+      "first_token_ms": {
+        "p50": null,
+        "p95": null
+      },
+      "first_tool_ms": {
+        "p50": 659,
+        "p95": 726
+      }
+    },
+    "task_completion": null,
+    "first_audio_ms": null,
+    "browser_playback_start_ms": null,
+    "basis": "model tool intent against simulated tool outputs; no commerce or speech effects executed"
+  },
+  "results": [
+    {
+      "id": "gift_budget-en",
+      "language": "en",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "update_shopping_task",
+          "arguments": {
+            "budget_paise": 50000,
+            "product_type": "gift"
+          },
+          "validation_status": "ok"
+        },
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "gift",
+            "max_price_paise": 50000,
+            "category": "",
+            "filters": null,
+            "sort_by": "price_asc"
+          },
+          "validation_status": "ok"
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 1337,
+      "first_token_ms": null,
+      "first_tool_ms": 726,
+      "human_review": "not_required"
+    },
+    {
+      "id": "gift_budget-te",
+      "language": "te",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "update_shopping_task",
+          "arguments": {
+            "recipient": "friend",
+            "budget_paise": 50000,
+            "product_type": null,
+            "requirements": null,
+            "exclusions": null
+          },
+          "validation_status": "ok"
+        },
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "",
+            "category": "",
+            "max_price_paise": 50000,
+            "min_price_paise": null,
+            "sort_by": "price_asc",
+            "filters": null,
+            "min_rating": null,
+            "availability": "discoverable",
+            "offset": 0
+          },
+          "validation_status": "ok"
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 1332,
+      "first_token_ms": null,
+      "first_tool_ms": 672,
+      "human_review": "pending"
+    },
+    {
+      "id": "gift_budget-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "",
+            "category": "",
+            "max_price_paise": 50000,
+            "min_price_paise": null,
+            "sort_by": "price_asc",
+            "filters": null,
+            "min_rating": null,
+            "availability": "discoverable",
+            "offset": 0
+          },
+          "validation_status": "ok"
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 647,
+      "first_token_ms": null,
+      "first_tool_ms": 647,
+      "human_review": "pending"
+    },
+    {
+      "id": "gift_budget-mixed",
+      "language": "mixed",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "update_shopping_task",
+          "arguments": {
+            "budget_paise": 50000,
+            "product_type": "gift"
+          },
+          "validation_status": "ok"
+        },
+        {
+          "name": "search_products",
+          "arguments": {
+            "query": "gift",
+            "max_price_paise": 50000,
+            "category": "",
+            "sort_by": "price_asc"
+          },
+          "validation_status": "ok"
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 1469,
+      "first_token_ms": null,
+      "first_tool_ms": 712,
+      "human_review": "pending"
+    },
+    {
+      "id": "budget_change-en",
+      "language": "en",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "set_budget",
+          "arguments": {
+            "budget_paise": 80000
+          },
+          "validation_status": "ok"
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 626,
+      "first_token_ms": null,
+      "first_tool_ms": 625,
+      "human_review": "not_required"
+    },
+    {
+      "id": "budget_change-te",
+      "language": "te",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "set_budget",
+          "arguments": {
+            "budget_paise": 80000
+          },
+          "validation_status": "ok"
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 631,
+      "first_token_ms": null,
+      "first_tool_ms": 631,
+      "human_review": "pending"
+    },
+    {
+      "id": "budget_change-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "set_budget",
+          "arguments": {
+            "budget_paise": 80000
+          },
+          "validation_status": "ok"
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 660,
+      "first_token_ms": null,
+      "first_tool_ms": 660,
+      "human_review": "pending"
+    },
+    {
+      "id": "budget_change-mixed",
+      "language": "mixed",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "set_budget",
+          "arguments": {
+            "budget_paise": 80000
+          },
+          "validation_status": "ok"
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 662,
+      "first_token_ms": null,
+      "first_tool_ms": 661,
+      "human_review": "pending"
+    },
+    {
+      "id": "remember_size-en",
+      "language": "en",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "manage_memory",
+          "arguments": {
+            "operation": "remember",
+            "subject": "self",
+            "scope": "general",
+            "key": "size",
+            "value": "medium"
+          },
+          "validation_status": "ok"
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 556,
+      "first_token_ms": null,
+      "first_tool_ms": 556,
+      "human_review": "not_required"
+    },
+    {
+      "id": "remember_size-te",
+      "language": "te",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "manage_memory",
+          "arguments": {
+            "operation": "remember",
+            "subject": "self",
+            "scope": "general",
+            "key": "size",
+            "value": "medium"
+          },
+          "validation_status": "ok"
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 663,
+      "first_token_ms": null,
+      "first_tool_ms": 663,
+      "human_review": "pending"
+    },
+    {
+      "id": "remember_size-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "manage_memory",
+          "arguments": {
+            "operation": "remember",
+            "subject": "self",
+            "scope": "clothing",
+            "key": "size",
+            "value": "medium"
+          },
+          "validation_status": "ok"
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 660,
+      "first_token_ms": null,
+      "first_tool_ms": 660,
+      "human_review": "pending"
+    },
+    {
+      "id": "remember_size-mixed",
+      "language": "mixed",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "manage_memory",
+          "arguments": {
+            "operation": "remember",
+            "subject": "self",
+            "scope": "general",
+            "key": "size",
+            "value": "medium"
+          },
+          "validation_status": "ok"
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 659,
+      "first_token_ms": null,
+      "first_tool_ms": 659,
+      "human_review": "pending"
+    },
+    {
+      "id": "forget_size-en",
+      "language": "en",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "manage_memory",
+          "arguments": {
+            "operation": "forget",
+            "subject": "self",
+            "scope": "clothing",
+            "key": "size",
+            "value": "unknown"
+          },
+          "validation_status": "ok"
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 583,
+      "first_token_ms": null,
+      "first_tool_ms": 583,
+      "human_review": "not_required"
+    },
+    {
+      "id": "forget_size-te",
+      "language": "te",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "manage_memory",
+          "arguments": {
+            "operation": "forget",
+            "subject": "self",
+            "scope": "clothing",
+            "key": "size",
+            "value": "unknown"
+          },
+          "validation_status": "ok"
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 692,
+      "first_token_ms": null,
+      "first_tool_ms": 691,
+      "human_review": "pending"
+    },
+    {
+      "id": "forget_size-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "manage_memory",
+          "arguments": {
+            "operation": "forget",
+            "subject": "self",
+            "scope": "clothing",
+            "key": "size",
+            "value": "unknown"
+          },
+          "validation_status": "ok"
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 741,
+      "first_token_ms": null,
+      "first_tool_ms": 741,
+      "human_review": "pending"
+    },
+    {
+      "id": "forget_size-mixed",
+      "language": "mixed",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "manage_memory",
+          "arguments": {
+            "operation": "forget",
+            "subject": "self",
+            "scope": "clothing",
+            "key": "size",
+            "value": "unknown"
+          },
+          "validation_status": "ok"
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 606,
+      "first_token_ms": null,
+      "first_tool_ms": 606,
+      "human_review": "pending"
+    },
+    {
+      "id": "recipient_memory-en",
+      "language": "en",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "manage_memory",
+          "arguments": {
+            "operation": "remember",
+            "subject": "brother",
+            "scope": "general",
+            "key": "size",
+            "value": "large"
+          },
+          "validation_status": "ok"
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": false,
+        "expected_tool_matched": false,
+        "forbidden_calls": []
+      },
+      "response_ms": 649,
+      "first_token_ms": null,
+      "first_tool_ms": 648,
+      "human_review": "not_required"
+    },
+    {
+      "id": "recipient_memory-te",
+      "language": "te",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "manage_memory",
+          "arguments": {
+            "operation": "remember",
+            "subject": "recipient:Brother",
+            "scope": "general",
+            "key": "size",
+            "value": "large"
+          },
+          "validation_status": "ok"
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 629,
+      "first_token_ms": null,
+      "first_tool_ms": 629,
+      "human_review": "pending"
+    },
+    {
+      "id": "recipient_memory-te-Latn",
+      "language": "te-Latn",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "manage_memory",
+          "arguments": {
+            "operation": "remember",
+            "subject": "recipient:annayya",
+            "scope": "clothing",
+            "key": "size",
+            "value": "large"
+          },
+          "validation_status": "ok"
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": false,
+        "expected_tool_matched": false,
+        "forbidden_calls": []
+      },
+      "response_ms": 597,
+      "first_token_ms": null,
+      "first_tool_ms": 597,
+      "human_review": "pending"
+    },
+    {
+      "id": "recipient_memory-mixed",
+      "language": "mixed",
+      "status": "completed",
+      "calls": [
+        {
+          "name": "manage_memory",
+          "arguments": {
+            "operation": "remember",
+            "subject": "recipient:Brother",
+            "scope": "general",
+            "key": "size",
+            "value": "large"
+          },
+          "validation_status": "ok"
+        }
+      ],
+      "text": "",
+      "score": {
+        "passed": true,
+        "expected_tool_matched": true,
+        "forbidden_calls": []
+      },
+      "response_ms": 659,
+      "first_token_ms": null,
+      "first_tool_ms": 659,
+      "human_review": "pending"
+    }
+  ]
+}
