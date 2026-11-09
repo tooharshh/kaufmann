@@ -117,7 +117,7 @@ def test_browser_sign_in_cart_budget_review_confirmation_and_reconnect():
                                 assert "error" not in response, response
                                 return response.get("result", {})
 
-                    async def evaluate(expression):
+                    async def evaluate(expression, *, allow_exception=False):
                         result = await call(
                             "Runtime.evaluate",
                             {
@@ -126,11 +126,17 @@ def test_browser_sign_in_cart_budget_review_confirmation_and_reconnect():
                                 "awaitPromise": True,
                             },
                         )
+                        if not allow_exception:
+                            assert "exceptionDetails" not in result, result.get(
+                                "exceptionDetails"
+                            )
                         return result.get("result", {}).get("value")
 
                     async def wait(expression):
                         for _ in range(120):
-                            if await evaluate(f"Boolean({expression})"):
+                            if await evaluate(
+                                f"Boolean({expression})", allow_exception=True
+                            ):
                                 return
                             await asyncio.sleep(0.1)
                         raise AssertionError(
@@ -168,11 +174,9 @@ def test_browser_sign_in_cart_budget_review_confirmation_and_reconnect():
                         assert await evaluate(
                             "getComputedStyle(document.querySelector('.hero')).display === 'none'"
                         )
+                        await wait("document.querySelector('.voice-orb-button')")
                         assert await evaluate(
-                            "getComputedStyle(document.querySelector('.announcement')).display === 'none'"
-                        )
-                        assert await evaluate(
-                            "getComputedStyle(document.querySelector('.voice-panel')).display !== 'none'"
+                            "getComputedStyle(document.querySelector('.voice-orb-widget')).display !== 'none' && !document.querySelector('.voice-orb-button').disabled"
                         )
                         assert await evaluate(
                             "location.pathname === '/' && document.querySelector('#cart-page').hidden"
@@ -191,6 +195,17 @@ def test_browser_sign_in_cart_budget_review_confirmation_and_reconnect():
                             "document.querySelector('#catalog-sidebar').getBoundingClientRect().right < document.querySelector('#product-grid').getBoundingClientRect().left && document.querySelector('.catalog-filter-panel').open"
                         )
                         await screenshot("/tmp/kaufmann-catalog-page.png")
+                        rejected_id = await evaluate("ui.products[0].id")
+                        await evaluate(
+                            "handleAgentNavigation({type:'catalog',query:'',category:'',exclude_ids:[ui.products[0].id]})"
+                        )
+                        await wait("!ui.catalogLoading && ui.products.length === 60")
+                        assert await evaluate(
+                            "ui.products.every(p=>p.id !== "
+                            + json.dumps(rejected_id)
+                            + ")"
+                        )
+
                         await evaluate(
                             "handleAgentNavigation({type:'catalog',query:'shirt',category:'',filters:{color:'Blue',size:'M'},min_rating:4,availability:'available',sort_by:'rating_desc'})"
                         )
@@ -231,13 +246,14 @@ def test_browser_sign_in_cart_budget_review_confirmation_and_reconnect():
                             window.LivekitClient = {...window.LivekitClient, Room:class {
                                 constructor() { window.__voiceRoom=this; this.handlers={}; this.remoteParticipants=new Map([['agent',{isAgent:true,identity:'agent'}]]); this.localParticipant={setMicrophoneEnabled:async enabled=>{window.__voiceCheck.microphone=enabled;},publishData:async payload=>{window.__voiceCheck.selections.push(JSON.parse(new TextDecoder().decode(payload)));}}; }
                                 on(name,callback) { this.handlers[name]=callback; return this; }
+                                registerTextStreamHandler(topic, callback) { this.textHandlers = {...this.textHandlers, [topic]:callback}; }
                                 async connect() {}
                                 async startAudio() {}
                                 async disconnect() { window.__voiceCheck.microphone=false; }
                             }};
                             document.querySelector('#voice-button').click();""")
                         await wait(
-                            "document.querySelector('#voice-button').getAttribute('aria-label') === 'End voice'"
+                            "document.querySelector('#voice-button').getAttribute('aria-pressed') === 'true' && window.__voiceCheck.microphone"
                         )
                         assert await evaluate("window.__voiceCheck.microphone")
                         await evaluate(
@@ -251,7 +267,7 @@ def test_browser_sign_in_cart_budget_review_confirmation_and_reconnect():
                         )
                         await screenshot("/tmp/kaufmann-product-page.png")
                         assert await evaluate(
-                            "document.querySelector('#product-detail').textContent.includes('Want more details?')"
+                            "document.querySelector('#product-detail .product-title').textContent === ui.focusedProduct.name && !!document.querySelector('#product-detail .primary-button')"
                         )
                         await wait("window.__voiceCheck.selections.length === 1")
                         assert (
@@ -283,6 +299,9 @@ def test_browser_sign_in_cart_budget_review_confirmation_and_reconnect():
                         await evaluate(
                             "window.LivekitClient=window.__originalVoiceSDK; delete window.__originalVoiceSDK; delete window.__voiceCheck; delete window.__voiceRoom; document.querySelector('#cart-page [data-browse-products]').click()"
                         )
+                        await wait(
+                            "location.pathname === '/' && !ui.busy && !ui.catalogLoading && document.querySelector('.add-button') && !document.querySelector('.add-button').disabled"
+                        )
                         await evaluate("document.querySelector('.add-button').click()")
                         await wait(
                             "document.querySelector('#basket-count').textContent === '1' && !ui.busy"
@@ -307,7 +326,7 @@ def test_browser_sign_in_cart_budget_review_confirmation_and_reconnect():
                         )
                         await screenshot("/tmp/kaufmann-cart-page.png")
                         await evaluate(
-                            """document.querySelector('#cart-items [data-product-id="PRODUCT_ID"] .cart-item-bottom > button').click()""".replace(
+                            """document.querySelector('#cart-items [data-product-id="PRODUCT_ID"] .remove-item').click()""".replace(
                                 "PRODUCT_ID", products[0]
                             )
                         )
@@ -465,6 +484,89 @@ def test_browser_sign_in_cart_budget_review_confirmation_and_reconnect():
                         await call("Page.reload")
                         await wait(
                             "location.pathname === '/profile' && ui.profile?.name === 'QA Shopper' && !ui.busy"
+                        )
+                        from src.state.memory import PreferenceMemory
+
+                        memory = PreferenceMemory(pool, users[0])
+                        await memory.change(
+                            "remember",
+                            {
+                                "subject": "self",
+                                "scope": "clothing",
+                                "key": "size",
+                                "value": "medium",
+                            },
+                            uuid4(),
+                        )
+                        await evaluate("loadMemoryControls()")
+                        assert (
+                            await evaluate(
+                                "document.querySelector('#preference-memory input').value"
+                            )
+                            == "medium"
+                        )
+                        await evaluate(
+                            "document.querySelector('#preference-memory input').value='large'; document.querySelector('#preference-memory .text-button').click()"
+                        )
+                        await wait(
+                            "!ui.busy && document.querySelector('#preference-memory input')?.value === 'large'"
+                        )
+                        assert (await memory.inspect())["facts"][0]["value"] == "large"
+                        await evaluate(
+                            "document.querySelectorAll('#preference-memory .text-button')[1].click()"
+                        )
+                        await wait(
+                            "!ui.busy && !document.querySelector('#preference-memory input')"
+                        )
+                        assert (await memory.inspect())["facts"] == []
+
+                        from src.catalog.versioned_import import (
+                            import_version,
+                            validate_catalog,
+                        )
+
+                        accepted, rejected, report = validate_catalog(
+                            Path("data/evaluation/catalogs/garden.csv"),
+                            json.loads(
+                                Path(
+                                    "data/evaluation/catalogs/garden.mapping.json"
+                                ).read_text()
+                            ),
+                        )
+                        async with pool.connection() as connection:
+                            garden_id = await import_version(
+                                connection,
+                                "Garden browser fixture",
+                                accepted,
+                                rejected,
+                                report,
+                            )
+                            await connection.execute(
+                                "insert into public.catalog_grants(user_id,catalog_id) values (%s,%s)",
+                                (users[0], garden_id),
+                            )
+                        original_catalog = await evaluate("ui.cart.catalog_id")
+                        await evaluate("loadMemoryControls()")
+                        await evaluate(
+                            "document.querySelector('#catalog-selection').value="
+                            + json.dumps(str(garden_id))
+                            + "; document.querySelector('#catalog-selection').dispatchEvent(new Event('change'))"
+                        )
+                        await wait(
+                            "!ui.busy && ui.cart.catalog_id === "
+                            + json.dumps(str(garden_id))
+                        )
+                        assert await evaluate(
+                            "ui.products.length === 2 && ui.cart.items.length === 0 && !!document.getElementById('filter-plant type')"
+                        )
+                        await evaluate(
+                            "document.querySelector('#catalog-selection').value="
+                            + json.dumps(original_catalog)
+                            + "; document.querySelector('#catalog-selection').dispatchEvent(new Event('change'))"
+                        )
+                        await wait(
+                            "!ui.busy && ui.cart.catalog_id === "
+                            + json.dumps(original_catalog)
                         )
                         await screenshot("/tmp/kaufmann-profile-page.png")
                         await call(

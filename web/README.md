@@ -1,6 +1,6 @@
 # Store frontend
 
-The store uses native HTML, CSS, and JavaScript, served by the existing Python API. No Node installation or frontend build is needed. The pinned LiveKit browser SDK is bundled locally with its license.
+The API serves the built storefront from `web/dist`. Build it with `npm ci && npm run build` from this directory, then start the API with `uv run python -m src.api`. `docker compose up --build` builds and serves the storefront and API together. Astryx, React and Vite versions are pinned in `package.json` and `package-lock.json`.
 
 ```sh
 uv sync --locked
@@ -19,7 +19,7 @@ Run `bash scripts/test_database.sh` for backend checks. With Chrome exposing CDP
 
 Product photos use the source catalog's image URLs. Historical `img5a.flixcart.com` and `img6a.flixcart.com` links are normalized to HTTPS on `rukminim2.flixcart.com`; the old hosts returned 403 during verification. The browser retries alternate catalog images if one fails. Some historical files may no longer exist, in which case the existing placeholder remains. No product image is fabricated or replaced with an unrelated stock photo.
 
-After sign-in, the marketplace shows only the product catalog, search, filters, account actions and a compact microphone button. The welcome artwork and promotional sections appear only before sign-in. Open **Cart** for a dedicated saved-cart page with all line items, quantities, removal, budget, delivery details, preferences and checkout. The floating microphone icon starts voice; its stop icon ends the call. Status text appears only while connecting, talking or handling an error.
+The storefront uses a warm editorial retail layout with Astryx product components, a responsive catalog, product galleries, comparison, profile and saved-cart pages. The signed-out landing fits a single screen; after sign-in, the marketplace focuses on live catalog results. Open **Cart** for a dedicated saved-cart page with line items, quantities, removal, budget, delivery details, preferences and checkout. The floating Kaufmann orb starts or ends LiveKit voice. It shows the current transcription or response and catalog-backed product cards without keeping transcript history. English/Telugu language preference and recommendation quick-add use the existing LiveKit and commerce APIs.
 
 The catalog is one continuous page, fetching sixty listings at a time as you scroll. There are no page numbers or next/previous controls. A load-more button is available as a keyboard-accessible alternative. Browsing batches do not overwrite the agent's saved result references.
 
