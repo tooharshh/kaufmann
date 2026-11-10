@@ -11,6 +11,7 @@ from psycopg.rows import dict_row
 from psycopg_pool import PoolTimeout
 
 from src.auth import AuthFailure, SupabaseAuth, public_auth_config
+from src.catalog.embeddings import configured_embeddings
 from src.catalog.search import Catalog
 from src.catalog.selection import catalog_options, select_catalog
 from src.config import Settings
@@ -176,6 +177,7 @@ def create_app(settings: Settings | None = None, *, pool=None) -> web.Applicatio
                         settings["SUPABASE_PUBLISHABLE_KEY"],
                     ),
                 )
+                app[SERVICES].catalog.embeddings = configured_embeddings(settings, http)
                 yield
         finally:
             if pool is None:
@@ -214,6 +216,7 @@ def create_app(settings: Settings | None = None, *, pool=None) -> web.Applicatio
             UUID(selection["catalog_id"]),
             request[USER],
             selection["generation"],
+            embeddings=request.app[SERVICES].catalog.embeddings,
         )
 
     async def catalog_selection(request):

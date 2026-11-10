@@ -12,6 +12,7 @@ from livekit.agents import AgentServer, cli, room_io
 
 from src.agents.concierge import Concierge
 from src.auth import SupabaseAuth
+from src.catalog.embeddings import configured_embeddings
 from src.catalog.search import Catalog
 from src.config import Settings
 from src.db.connection import create_pool
@@ -53,7 +54,13 @@ async def entrypoint(ctx: agents.JobContext):
             CommerceEngine(
                 pool, user_id, dispatch["catalog_id"], dispatch["generation"]
             ),
-            Catalog(pool, dispatch["catalog_id"], user_id, dispatch["generation"]),
+            Catalog(
+                pool,
+                dispatch["catalog_id"],
+                user_id,
+                dispatch["generation"],
+                embeddings=configured_embeddings(settings, http),
+            ),
             profile_auth,
             dispatch["access_token"],
         )

@@ -32,6 +32,14 @@ class Settings:
             "LIVEKIT_AGENT_DEPLOYMENT", ""
         ).strip()
         missing = [name for name in names if not values[name]]
+        values["SEMANTIC_SEARCH_ENABLED"] = (
+            os.environ.get("SEMANTIC_SEARCH_ENABLED", "false").strip().lower()
+        )
+        values["GEMINI_API_KEY"] = os.environ.get("GEMINI_API_KEY", "").strip()
+        if values["SEMANTIC_SEARCH_ENABLED"] not in {"true", "false"}:
+            raise ValueError("SEMANTIC_SEARCH_ENABLED must be true or false")
+        if values["SEMANTIC_SEARCH_ENABLED"] == "true" and not values["GEMINI_API_KEY"]:
+            missing.append("GEMINI_API_KEY")
         if missing:
             raise ValueError("Missing configuration: " + ", ".join(missing))
         for name, schemes in (

@@ -68,11 +68,13 @@ class CatalogTools:
             "discoverable", "all", "available", "out_of_stock", "unknown"
         ] = "discoverable",
         offset: int = 0,
+        semantic_query: str | None = None,
     ) -> dict:
         return voice_result(
             await self.runtime.search(
                 context.speech_handle,
                 query=query,
+                semantic_query=semantic_query,
                 category=category,
                 max_price_paise=max_price_paise,
                 min_price_paise=min_price_paise,

@@ -46,4 +46,10 @@ Memory supports size, language, brand, material and response style, with at most
 
 ## Language interpretation
 
+Optional Gemini semantic retrieval is documented in `docs/semantic-search.md`.
+It adds query/document embeddings and reciprocal rank fusion alongside full-text
+search, retaining the same structured eligibility predicates. It is disabled by
+default and falls back to keywords on provider/index errors. The conversation
+model and deterministic commerce engine are unchanged.
+
 English, Telugu script, Romanized Telugu and mixed requests use the same model/tool path. `src/language/requests.py` supplies conservative lexical and number-reading aids alongside the original input, without an extra translation call. The model interprets intent, negation, corrections and subjects; code validates typed arguments and effects. An unambiguous single rupee budget is checked against the source amount before mutation. Unknown vocabulary, ambiguous amounts and unsupported currencies are left for clarification rather than silently rewritten. Text evaluation and recorded speech evaluation remain separate; see `docs/evaluation.md` and `docs/browser-evaluation.md` for measured results and limitations.

@@ -5,7 +5,7 @@ repository_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repository_root"
 test_container_name="kaufmann-tests-$$"
 docker run --rm -d --name "$test_container_name" \
-    -e POSTGRES_PASSWORD=local-test-only -p 127.0.0.1::5432 postgres:17-alpine > /dev/null
+    -e POSTGRES_PASSWORD=local-test-only -p 127.0.0.1::5432 pgvector/pgvector:0.8.1-pg17 > /dev/null
 trap 'docker stop "$test_container_name" > /dev/null' EXIT
 for ((attempt = 0; attempt < 30; attempt++)); do
     if docker exec "$test_container_name" pg_isready -h 127.0.0.1 -U postgres > /dev/null 2>&1; then

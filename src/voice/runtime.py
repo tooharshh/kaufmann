@@ -116,6 +116,7 @@ class VoiceRuntime:
                 "filters",
                 "min_rating",
                 "availability",
+                "semantic_query",
             )
         )
 
@@ -485,6 +486,7 @@ class VoiceRuntime:
                 "state": voice_result(self.state),
                 "current_user_request": self.request,
                 "request_language_aids": model_request_aids(self.request),
+                "semantic_search": bool(getattr(self.catalog, "embeddings", None)),
                 "selected_product": voice_result(self.focused_product),
                 "remembered_preferences": self.memory_facts,
             },

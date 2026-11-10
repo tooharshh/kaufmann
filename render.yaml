@@ -10,6 +10,8 @@ services:
     healthCheckPath: /health
     autoDeployTrigger: off
     envVars:
+      - key: SEMANTIC_SEARCH_ENABLED
+        value: "false"
       - key: API_HOST
         value: 0.0.0.0
       - key: CEREBRAS_API_KEY

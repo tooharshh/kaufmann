@@ -1,5 +1,6 @@
 import asyncio
 import copy
+import re
 import time
 
 import psycopg
@@ -7,6 +8,7 @@ from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 from psycopg_pool import AsyncConnectionPool, PoolTimeout
 
+from src.catalog.embeddings import PROFILE, EmbeddingUnavailable
 from src.catalog.filters import (
     ATTRIBUTES,
     RATING_SQL,
@@ -50,6 +52,49 @@ ts_rank(p.search_document, query.terms) desc, discounted_price, uniq_id
 limit %(limit)s offset %(offset)s
 """.replace("__FACETS__", filter_sql()).replace("__RATING__", RATING_SQL)
 
+# Reuse the complete eligibility predicate: semantic similarity cannot bypass it.
+_ELIGIBLE = (
+    SEARCH_SQL.split("\norder by case")[0]
+    .replace(
+        "select p.*, i.available, i.is_demo",
+        "select p.*, i.available, i.is_demo, ts_rank(p.search_document, query.terms) as lexical_score, (p.search_document @@ query.terms) as lexical_match",
+    )
+    .replace("  and (%(query)s = '' or p.search_document @@ query.terms)\n", "\n")
+    .replace(
+        "  and discounted_price > 0",
+        "  and (%(negative_query)s = '' or not (p.search_document @@ websearch_to_tsquery('english', %(negative_query)s)))\n  and discounted_price > 0",
+    )
+)
+_ELIGIBLE = _ELIGIBLE.split("\nselect ", 1)[1]
+HYBRID_SQL = (
+    """
+with query as (select websearch_to_tsquery('english', %(query)s) as terms),
+eligible as materialized (select """
+    + _ELIGIBLE
+    + """),
+lexical as (
+    select uniq_id, row_number() over(order by lexical_score desc, uniq_id) as rank
+    from eligible where lexical_match order by lexical_score desc, uniq_id limit %(candidates)s
+),
+semantic as (
+    select e.uniq_id, row_number() over(order by v.embedding OPERATOR(extensions.<=>) %(vector)s::extensions.vector, e.uniq_id) as rank
+    from eligible e join public.product_embeddings v
+      on v.product_id=e.uniq_id and v.catalog_id=e.catalog_id and v.profile=%(profile)s
+    where (v.embedding OPERATOR(extensions.<=>) %(vector)s::extensions.vector) <= %(max_distance)s
+    order by v.embedding OPERATOR(extensions.<=>) %(vector)s::extensions.vector, e.uniq_id limit %(candidates)s
+),
+scores as (
+    select uniq_id, sum(score) as score from (
+        select uniq_id, 1.0/(60+rank) as score from lexical
+        union all select uniq_id, 1.0/(60+rank) from semantic
+    ) ranked group by uniq_id
+)
+select e.* from eligible e join scores s using(uniq_id)
+order by s.score desc, e.uniq_id
+limit %(limit)s offset %(offset)s
+"""
+)
+
 
 class Catalog:
     def __init__(
@@ -58,11 +103,13 @@ class Catalog:
         catalog_id=DEFAULT_CATALOG,
         user_id=None,
         generation=None,
+        embeddings=None,
     ):
         self.catalog_id = catalog_id
         self.user_id = user_id
         self.generation = generation
         self.pool = pool
+        self.embeddings = embeddings
         self._filter_cache = None
         self._filter_expires = 0
         self._filter_lock = asyncio.Lock()
@@ -104,6 +151,7 @@ class Catalog:
         limit: int = 5,
         offset: int = 0,
         exclude_ids: list[str] | None = None,
+        semantic_query: str | None = None,
     ) -> dict:
         filters = {} if filters is None else filters
         exclude_ids = [] if exclude_ids is None else exclude_ids
@@ -128,6 +176,10 @@ class Catalog:
                 and (type(min_rating) not in (int, float) or not 0 <= min_rating <= 5)
             )
             or not isinstance(query, str)
+            or (
+                semantic_query is not None
+                and (not isinstance(semantic_query, str) or len(semantic_query) > 500)
+            )
             or not isinstance(category, str)
             or len(query) > 200
             or len(category) > 100
@@ -156,33 +208,60 @@ class Catalog:
             )
         ):
             return {"status": "invalid_input", "products": []}
-        rows = await self._fetch(
-            SEARCH_SQL,
-            {
-                "query": query.strip(),
-                "exclude_ids": exclude_ids,
-                "extra_filters": Jsonb(
-                    {
-                        key: value
-                        for key, value in filters.items()
-                        if key not in ATTRIBUTES
-                    }
-                ),
-                "category": category.strip(),
-                "max_price": max_price_paise,
-                "min_price": min_price_paise,
-                "sort_by": sort_by,
-                "availability": availability,
-                "min_rating": min_rating,
-                **{name: filters.get(name, "").strip() for name in ATTRIBUTES},
-                **{
-                    name + "_pattern": attribute_pattern(name, filters.get(name, ""))
-                    for name in ATTRIBUTES
-                },
-                "limit": limit + 1,
-                "offset": offset,
+        params = {
+            "query": query.strip(),
+            "exclude_ids": exclude_ids,
+            "extra_filters": Jsonb(
+                {key: value for key, value in filters.items() if key not in ATTRIBUTES}
+            ),
+            "category": category.strip(),
+            "max_price": max_price_paise,
+            "min_price": min_price_paise,
+            "sort_by": sort_by,
+            "availability": availability,
+            "min_rating": min_rating,
+            **{name: filters.get(name, "").strip() for name in ATTRIBUTES},
+            **{
+                name + "_pattern": attribute_pattern(name, filters.get(name, ""))
+                for name in ATTRIBUTES
             },
-        )
+            "limit": limit + 1,
+            "offset": offset,
+        }
+        retrieval = "keyword"
+        fallback = None
+        rows = None
+        # Explicit price/rating/date sorts retain their original complete ordering.
+        if self.embeddings and query.strip() and sort_by == "relevance":
+            try:
+                negatives = re.findall(r'(?:^|\s)-(?:"([^"]+)"|(\S+))', query)
+                negative_query = " OR ".join(
+                    '"' + (phrase or word).replace('"', "") + '"'
+                    for phrase, word in negatives
+                )
+                async with asyncio.timeout(3.5):
+                    vector = await self.embeddings.query(
+                        (semantic_query or query).strip()
+                    )
+                rows = await self._fetch(
+                    HYBRID_SQL,
+                    {
+                        **params,
+                        "vector": vector,
+                        "profile": PROFILE,
+                        "candidates": 1000,
+                        "max_distance": 0.45,
+                        "negative_query": negative_query,
+                    },
+                )
+                if rows is not None:
+                    retrieval = "hybrid"
+                else:
+                    fallback = "semantic_index_unavailable"
+            except (EmbeddingUnavailable, TimeoutError):
+                fallback = "embedding_unavailable"
+        if rows is None:
+            rows = await self._fetch(SEARCH_SQL, params)
         if rows is None:
             return {"status": "unavailable", "products": []}
         return {
@@ -191,6 +270,8 @@ class Catalog:
             "has_more": len(rows) > limit,
             "offset": offset,
             "catalog_id": str(self.catalog_id),
+            "retrieval": retrieval,
+            "retrieval_fallback": fallback,
         }
 
     async def filter_options(self):
